@@ -42,6 +42,9 @@ class Pgsql extends Writer implements WriterInterface
     /** @var Logger */
     protected $logger;
 
+    /** @var \PDO */
+    protected $db;
+
     public function __construct($dbParams, Logger $logger)
     {
         parent::__construct($dbParams, $logger);
@@ -124,8 +127,8 @@ class Pgsql extends Writer implements WriterInterface
     public function write(CsvFile $csvFile, array $table)
     {
         $copyCommand = sprintf(
-            '\copy %s FROM \'%s\' WITH CSV HEADER DELIMITER AS \',\'',
-            $table['dbName'],
+            '\copy "%s" FROM \'%s\' WITH CSV HEADER DELIMITER AS \',\'',
+            $this->dbParams['schema'] . '.' .$table['dbName'],
             $csvFile->getPathname()
         );
 

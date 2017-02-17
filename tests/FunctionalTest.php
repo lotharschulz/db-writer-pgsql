@@ -6,49 +6,36 @@
  * Time: 17:20
  */
 
-namespace Keboola\DbWriter\Writer\Redshift\Tests;
+namespace Keboola\DbWriter\Writer\Pgsql\Tests;
 
-use Keboola\DbWriter\Redshift\Test\S3Loader;
 use Keboola\DbWriter\Test\BaseTest;
-use Keboola\StorageApi\Client;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
 
 class FunctionalTest extends BaseTest
 {
-    const DRIVER = 'Redshift';
+    const DRIVER = 'Pgsql';
 
     protected $dataDir = ROOT_PATH . 'tests/data/functional';
+
+    protected $tmpDataDir = '/tmp/data';
 
     protected $defaultConfig;
 
     public function setUp()
     {
         // cleanup & init
+        $this->prepareDataFiles();
         $this->defaultConfig = $this->initConfig();
-        $writer = $this->getWriter($this->defaultConfig['parameters']);
-        $s3Loader = new S3Loader(
-            $this->dataDir,
-            new Client([
-                'token' => getenv('STORAGE_API_TOKEN')
-            ])
-        );
 
-        $yaml = new Yaml();
+        var_dump(json_encode($this->defaultConfig)); die;
+
+        $writer = $this->getWriter($this->defaultConfig['parameters']);
+
         foreach ($this->defaultConfig['parameters']['tables'] as $table) {
             // clean destination DB
             $writer->drop($table['dbName']);
-
-            // upload source files to S3 - mimic functionality of docker-runner
-            $manifestPath = $this->dataDir . '/in/tables/' . $table['tableId'] . '.csv.manifest';
-            $manifestData = $yaml->parse(file_get_contents($manifestPath));
-            $manifestData['s3'] = $s3Loader->upload($table['tableId']);
-
-            unlink($manifestPath);
-            file_put_contents(
-                $manifestPath,
-                $yaml->dump($manifestData)
-            );
         }
     }
 
@@ -57,45 +44,34 @@ class FunctionalTest extends BaseTest
         $process = new Process('php ' . ROOT_PATH . 'run.php --data=' . $this->dataDir . ' 2>&1');
         $process->run();
 
-        $this->assertEquals(0, $process->getExitCode());
-    }
-
-    public function testRunEmptyTable()
-    {
-        $config = $this->initConfig(function () {
-            $config = $this->defaultConfig;
-            $tables = array_map(function ($table) {
-                $table['items'] = array_map(function ($item) {
-                    $item['type'] = 'IGNORE';
-                    return $item;
-                }, $table['items']);
-                return $table;
-            }, $config['parameters']['tables']);
-            $config['parameters']['tables'] = $tables;
-
-            return $config;
-        });
-
-        $yaml = new Yaml();
-
-        foreach ($config['parameters']['tables'] as $table) {
-            // upload source files to S3 - mimic functionality of docker-runner
-            $manifestPath = $this->dataDir . '/in/tables/' . $table['tableId'] . '.csv.manifest';
-            $manifestData = $yaml->parse(file_get_contents($manifestPath));
-            $manifestData['columns'] = [];
-
-            unlink($manifestPath);
-            file_put_contents(
-                $manifestPath,
-                $yaml->dump($manifestData)
-            );
-        }
-
-        $process = new Process('php ' . ROOT_PATH . 'run.php --data=' . $this->dataDir);
-        $process->run();
+        var_dump($process->getOutput());
+        var_dump($process->getErrorOutput());
+        die;
 
         $this->assertEquals(0, $process->getExitCode());
     }
+
+//    public function testRunEmptyTable()
+//    {
+//        $this->initConfig(function () {
+//            $config = $this->defaultConfig;
+//            $tables = array_map(function ($table) {
+//                $table['items'] = array_map(function ($item) {
+//                    $item['type'] = 'IGNORE';
+//                    return $item;
+//                }, $table['items']);
+//                return $table;
+//            }, $config['parameters']['tables']);
+//            $config['parameters']['tables'] = $tables;
+//
+//            return $config;
+//        });
+//
+//        $process = new Process('php ' . ROOT_PATH . 'run.php --data=' . $this->dataDir);
+//        $process->run();
+//
+//        $this->assertEquals(0, $process->getExitCode());
+//    }
 
     public function testTestConnection()
     {
@@ -118,7 +94,7 @@ class FunctionalTest extends BaseTest
     private function initConfig(callable $callback = null)
     {
         $yaml = new Yaml();
-        $configPath = $this->dataDir . '/config.yml';
+        $configPath = $this->dataDir . '/config.json';
         $config = $yaml->parse(file_get_contents($configPath));
 
         $config['parameters']['writer_class'] = self::DRIVER;
@@ -135,9 +111,30 @@ class FunctionalTest extends BaseTest
             $config = $callback($config);
         }
 
-        @unlink($configPath);
-        file_put_contents($configPath, $yaml->dump($config));
+        $tmpConfigPath = $this->tmpDataDir . '/config.json';
+        @unlink($tmpConfigPath);
+        file_put_contents($tmpConfigPath, $yaml->dump($config));
 
         return $config;
+    }
+
+    private function prepareDataFiles()
+    {
+        $fs = new Filesystem();
+        $fs->remove($this->tmpDataDir);
+        $fs->mkdir($this->tmpDataDir);
+        $fs->mkdir($this->tmpDataDir . '/in/tables/');
+        $fs->copy(
+            $this->dataDir . '/in/tables/simple.csv',
+            $this->tmpDataDir . '/in/tables/simple.csv'
+        );
+        $fs->copy(
+            $this->dataDir . '/in/tables/simple_increment.csv',
+            $this->tmpDataDir . '/in/tables/simple_increment.csv'
+        );
+        $fs->copy(
+            $this->dataDir . '/in/tables/special.csv',
+            $this->tmpDataDir . '/in/tables/special.csv'
+        );
     }
 }

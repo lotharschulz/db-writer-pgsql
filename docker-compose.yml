@@ -15,6 +15,7 @@ services:
       PGSQL_DB_USER: postgres
       PGSQL_DB_PASSWORD: some password
       PGSQL_DB_DATABASE: postgres
+      PGSQL_DB_SCHEMA: public
     links:
       - pgsql
 #      - sshproxy

@@ -4,6 +4,7 @@ use Keboola\DbWriter\Application;
 use Keboola\DbWriter\Exception\ApplicationException;
 use Keboola\DbWriter\Exception\UserException;
 use Keboola\DbWriter\Logger;
+use Keboola\DbWriter\Pgsql\Configuration\ConfigDefinition;
 use Monolog\Handler\NullHandler;
 use Symfony\Component\Yaml\Yaml;
 
@@ -21,13 +22,13 @@ try {
     if (!isset($arguments["data"])) {
         throw new UserException('Data folder not set.');
     }
-    $config = Yaml::parse(file_get_contents($arguments["data"] . "/config.yml"));
+    $config = Yaml::parse(file_get_contents($arguments["data"] . "/config.json"));
     $config['parameters']['data_dir'] = $arguments['data'];
     $config['parameters']['writer_class'] = 'Pgsql';
 
     $action = isset($config['action']) ? $config['action'] : $action;
 
-    $app = new Application($config, $logger);
+    $app = new Application($config, $logger, new ConfigDefinition());
 
     if ($action !== 'run') {
         $app['logger']->setHandlers(array(new NullHandler(Logger::INFO)));

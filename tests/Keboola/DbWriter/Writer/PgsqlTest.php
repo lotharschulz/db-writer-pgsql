@@ -22,15 +22,30 @@ class PgsqlTest extends BaseTest
 
     public function setUp()
     {
-        $this->config = $this->getConfig(self::DRIVER);
-        $this->config['parameters']['writer_class'] = 'Pgsql';
-        $this->config['parameters']['db']['password'] = $this->config['parameters']['db']['#password'];
+        $this->config = $this->initConfig();
         $this->writer = $this->getWriter($this->config['parameters']);
 
         $tables = $this->config['parameters']['tables'];
         foreach ($tables as $table) {
             $this->writer->drop($table['dbName']);
         }
+    }
+
+    private function initConfig()
+    {
+        $configPath = $this->dataDir . '/config.json';
+        $config = json_decode(file_get_contents($configPath), true);
+
+        $config['parameters']['writer_class'] = ucfirst(self::DRIVER);
+        $config['parameters']['db']['user'] = $this->getEnv(self::DRIVER, 'DB_USER', true);
+        $config['parameters']['db']['#password'] = $this->getEnv(self::DRIVER, 'DB_PASSWORD', true);
+        $config['parameters']['db']['password'] = $this->getEnv(self::DRIVER, 'DB_PASSWORD', true);
+        $config['parameters']['db']['host'] = $this->getEnv(self::DRIVER, 'DB_HOST');
+        $config['parameters']['db']['port'] = $this->getEnv(self::DRIVER, 'DB_PORT');
+        $config['parameters']['db']['database'] = $this->getEnv(self::DRIVER, 'DB_DATABASE');
+        $config['parameters']['db']['schema'] = $this->getEnv(self::DRIVER, 'DB_SCHEMA');
+
+        return $config;
     }
 
     private function getInputCsv($tableId)
