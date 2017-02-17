@@ -128,7 +128,7 @@ class Pgsql extends Writer implements WriterInterface
     {
         $copyCommand = sprintf(
             '\copy "%s" FROM \'%s\' WITH CSV HEADER DELIMITER AS \',\'',
-            $this->dbParams['schema'] . '.' .$table['dbName'],
+            $table['dbName'],
             $csvFile->getPathname()
         );
 

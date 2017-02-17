@@ -15,7 +15,7 @@
         "tableId": "simple",
         "dbName": "simple",
         "export": true,
-        "incremental": true,
+        "incremental": false,
         "primaryKey": [
           "id"
         ],
@@ -50,6 +50,7 @@
         "tableId": "special",
         "dbName": "special",
         "export": true,
+        "incremental": false,
         "items": [
           {
             "name": "col1",
@@ -71,9 +72,9 @@
       },
       {
         "tableId": "simple_increment",
-        "dbName": "simple",
+        "dbName": "simple_increment",
         "export": true,
-        "incremental": true,
+        "incremental": false,
         "primaryKey": [
           "id"
         ],

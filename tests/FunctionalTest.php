@@ -11,7 +11,6 @@ namespace Keboola\DbWriter\Writer\Pgsql\Tests;
 use Keboola\DbWriter\Test\BaseTest;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
-use Symfony\Component\Yaml\Yaml;
 
 class FunctionalTest extends BaseTest
 {
@@ -28,27 +27,16 @@ class FunctionalTest extends BaseTest
         // cleanup & init
         $this->prepareDataFiles();
         $this->defaultConfig = $this->initConfig();
-
-        var_dump(json_encode($this->defaultConfig)); die;
-
         $writer = $this->getWriter($this->defaultConfig['parameters']);
-
         foreach ($this->defaultConfig['parameters']['tables'] as $table) {
-            // clean destination DB
             $writer->drop($table['dbName']);
         }
     }
 
     public function testRun()
     {
-        $process = new Process('php ' . ROOT_PATH . 'run.php --data=' . $this->dataDir . ' 2>&1');
-        $process->run();
-
-        var_dump($process->getOutput());
-        var_dump($process->getErrorOutput());
-        die;
-
-        $this->assertEquals(0, $process->getExitCode());
+        $process = $this->runProcess();
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
     }
 
 //    public function testRunEmptyTable()
@@ -80,22 +68,18 @@ class FunctionalTest extends BaseTest
             return $config;
         });
 
-        $process = new Process('php ' . ROOT_PATH . 'run.php --data=' . $this->dataDir . ' 2>&1');
-        $process->run();
-
+        $process = $this->runProcess();
         $this->assertEquals(0, $process->getExitCode());
 
         $data = json_decode($process->getOutput(), true);
-
         $this->assertArrayHasKey('status', $data);
         $this->assertEquals('success', $data['status']);
     }
 
     private function initConfig(callable $callback = null)
     {
-        $yaml = new Yaml();
         $configPath = $this->dataDir . '/config.json';
-        $config = $yaml->parse(file_get_contents($configPath));
+        $config = json_decode(file_get_contents($configPath), true);
 
         $config['parameters']['writer_class'] = self::DRIVER;
         $config['parameters']['db']['user'] = $this->getEnv(self::DRIVER, 'DB_USER', true);
@@ -113,7 +97,7 @@ class FunctionalTest extends BaseTest
 
         $tmpConfigPath = $this->tmpDataDir . '/config.json';
         @unlink($tmpConfigPath);
-        file_put_contents($tmpConfigPath, $yaml->dump($config));
+        file_put_contents($tmpConfigPath, json_encode($config));
 
         return $config;
     }
@@ -136,5 +120,13 @@ class FunctionalTest extends BaseTest
             $this->dataDir . '/in/tables/special.csv',
             $this->tmpDataDir . '/in/tables/special.csv'
         );
+    }
+
+    private function runProcess()
+    {
+        $process = new Process('php ' . ROOT_PATH . 'run.php --data=' . $this->tmpDataDir . ' 2>&1');
+        $process->run();
+
+        return $process;
     }
 }
