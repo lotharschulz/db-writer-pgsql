@@ -155,41 +155,39 @@ class PgsqlTest extends BaseTest
 
     public function testUpsert()
     {
-//        $conn = $this->writer->getConnection();
-//        $tables = $this->config['parameters']['tables'];
-//        foreach ($tables as $table) {
-//            $this->writer->drop($table['dbName']);
-//        }
-//        $table = $tables[0];
-//
-//        $s3Manifest = $this->loadDataToS3($table['tableId']);
-//
-//        $targetTable = $table;
-//        $table['dbName'] .= $table['incremental']?'_temp_' . uniqid():'';
-//
-//        // first write
-//        $this->writer->create($targetTable);
-//        $this->writer->writeFromS3($s3Manifest, $targetTable);
-//
-//        // second write
-//        $s3Manifest = $this->loadDataToS3($table['tableId'] . "_increment");
-//        $this->writer->create($table);
-//        $this->writer->writeFromS3($s3Manifest, $table);
-//
-//        $this->writer->upsert($table, $targetTable['dbName']);
-//
-//        $stmt = $conn->query("SELECT * FROM {$targetTable['dbName']} ORDER BY id ASC");
-//        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-//
-//        $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-//        $csv = new CsvFile($resFilename);
-//        $csv->writeRow(["id", "name", "glasses"]);
-//        foreach ($res as $row) {
-//            $csv->writeRow($row);
-//        }
-//
-//        $expectedFilename = $this->getInputCsv($table['tableId'] . "_merged");
-//
-//        $this->assertFileEquals($expectedFilename, $resFilename);
+        $conn = $this->writer->getConnection();
+        $tables = $this->config['parameters']['tables'];
+        foreach ($tables as $table) {
+            $this->writer->drop($table['dbName']);
+        }
+        $table = $tables[0];
+        $targetTable = $table;
+        $table['dbName'] .= $table['incremental']?'_temp_' . uniqid():'';
+
+        // first write
+        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $targetTable['incremental'] = false;
+        $this->writer->create($targetTable);
+        $this->writer->write($csvFile, $targetTable);
+
+        // second write (write to temp table, then merge with target table)
+        $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . "_increment"));
+        $this->writer->create($table);
+        $this->writer->write($csvFile2, $table);
+        $this->writer->upsert($table, $targetTable['dbName']);
+
+        $stmt = $conn->query("SELECT * FROM {$targetTable['dbName']} ORDER BY id ASC");
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
+        $csv = new CsvFile($resFilename);
+        $csv->writeRow(["id", "name", "glasses"]);
+        foreach ($res as $row) {
+            $csv->writeRow($row);
+        }
+
+        $expectedFilename = $this->getInputCsv($table['tableId'] . "_merged");
+
+        $this->assertFileEquals($expectedFilename, $resFilename);
     }
 }

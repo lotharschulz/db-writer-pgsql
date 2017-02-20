@@ -97,8 +97,7 @@ class Pgsql extends Writer implements WriterInterface
     public function create(array $table)
     {
         $sql = sprintf(
-            "CREATE %s TABLE %s (",
-            isset($table['incremental']) && $table['incremental'] ? 'TEMPORARY' : '',
+            "CREATE TABLE %s (",
             $this->escape($table['dbName'])
         );
 
@@ -127,8 +126,9 @@ class Pgsql extends Writer implements WriterInterface
     public function write(CsvFile $csvFile, array $table)
     {
         $copyCommand = sprintf(
-            '\copy "%s" FROM \'%s\' WITH CSV HEADER DELIMITER AS \',\'',
-            $table['dbName'],
+            '\copy %s.%s FROM \'%s\' WITH CSV HEADER DELIMITER AS \',\'',
+            $this->escape($this->dbParams['schema']),
+            $this->escape($table['dbName']),
             $csvFile->getPathname()
         );
 
