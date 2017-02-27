@@ -20,21 +20,26 @@ use Symfony\Component\Process\Process;
 class Pgsql extends Writer implements WriterInterface
 {
     private static $allowedTypes = [
-        'int', 'int2', 'int4', 'int8',
-        'smallint', 'integer', 'bigint',
-        'decimal', 'real', 'double precision', 'numeric',
-        'float', 'float4', 'float8',
+        'int', 'smallint', 'integer', 'bigint',
+        'decimal', 'numeric', 'real', 'double precision',
+        'float4', 'float8',
+        'serial', 'bigserial', 'smallserial',
+        'money',
         'boolean',
-        'char', 'character', 'nchar', 'bpchar',
-        'varchar', 'character varying', 'nvarchar', 'text',
-        'date', 'timestamp', 'timestamp without timezone'
+        'char', 'character',
+        'varchar', 'character varying', 'text',
+        'bytea',
+        'date', 'time', 'time with timezone', 'timestamp', 'timestamp with timezone', 'interval',
+        'enum',
+        'json', 'jsonb'
     ];
 
     private static $typesWithSize = [
         'decimal', 'real', 'double precision', 'numeric',
-        'float', 'float4', 'float8',
-        'char', 'character', 'nchar', 'bpchar',
-        'varchar', 'character varying', 'nvarchar', 'text',
+        'float4', 'float8',
+        'char', 'character',
+        'varchar', 'character varying',
+        'time', 'time with timezone', 'timestamp', 'timestamp with timezone', 'interval'
     ];
 
     private $dbParams;
@@ -48,12 +53,13 @@ class Pgsql extends Writer implements WriterInterface
     public function __construct($dbParams, Logger $logger)
     {
         parent::__construct($dbParams, $logger);
-        $this->dbParams = $dbParams;
         $this->logger = $logger;
     }
 
     public function createConnection($dbParams)
     {
+        $this->dbParams = $dbParams;
+
         // convert errors to PDOExceptions
         $options = [
             \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
@@ -125,24 +131,38 @@ class Pgsql extends Writer implements WriterInterface
 
     public function write(CsvFile $csvFile, array $table)
     {
-        $copyCommand = sprintf(
-            '\copy %s.%s FROM \'%s\' WITH CSV HEADER DELIMITER AS \',\'',
-            $this->escape($this->dbParams['schema']),
-            $this->escape($table['dbName']),
-            $csvFile->getPathname()
-        );
+        $fieldsArr = [];
+        foreach ($table['items'] as $column) {
+            $field = $column['dbName'];
+            if (boolval($column['nullable'])) {
+                $field .= ' [null if blanks]';
+            }
+            $fieldsArr[] = $field;
+        }
 
-        $command = sprintf(
-            'PGPASSWORD=\'%s\' psql %s -h %s -p %s -U %s -c "%s"',
+        $connectionString = sprintf(
+            'postgres://%s:"%s"@%s:%s/%s?tablename=%s',
+            $this->dbParams['user'],
             $this->dbParams['password'],
-            $this->dbParams['database'],
             $this->dbParams['host'],
             $this->dbParams['port'],
-            $this->dbParams['user'],
-            $copyCommand
+            $this->dbParams['database'],
+            $this->escape($this->dbParams['schema']) . '.' . $this->escape($table['dbName'])
         );
 
-        $process = new Process($command);
+        $pgloaderCommand = sprintf(
+            'pgloader --type csv \
+                --field "%s" \
+                --with truncate \
+                --with "skip header = 1" \
+                --with "fields terminated by \',\'" \
+                %s %s',
+            implode(',', $fieldsArr),
+            $csvFile->getPathname(),
+            $connectionString
+        );
+
+        $process = new Process($pgloaderCommand);
         $process->setTimeout(null);
 
         try {

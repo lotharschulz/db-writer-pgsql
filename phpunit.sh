@@ -35,4 +35,4 @@ composer install -n
 
 #export ROOT_PATH="/code";
 
-./vendor/bin/phpunit --filter PgsqlTest --verbose --debug
+./vendor/bin/phpunit --verbose --debug

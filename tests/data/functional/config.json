@@ -74,7 +74,7 @@
         "tableId": "simple_increment",
         "dbName": "simple_increment",
         "export": true,
-        "incremental": false,
+        "incremental": true,
         "primaryKey": [
           "id"
         ],
