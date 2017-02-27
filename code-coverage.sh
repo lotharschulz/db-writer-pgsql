@@ -34,3 +34,4 @@ composer selfupdate
 composer install -n
 
 php ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+php ./vendor/bin/test-reporter
