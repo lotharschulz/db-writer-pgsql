@@ -20,15 +20,13 @@ class FunctionalTest extends BaseTest
 
     protected $tmpDataDir = '/tmp/data';
 
-    protected $defaultConfig;
-
     public function setUp()
     {
         // cleanup & init
         $this->prepareDataFiles();
-        $this->defaultConfig = $this->initConfig();
-        $writer = $this->getWriter($this->defaultConfig['parameters']);
-        foreach ($this->defaultConfig['parameters']['tables'] as $table) {
+        $config = $this->initConfig();
+        $writer = $this->getWriter($config['parameters']);
+        foreach ($config['parameters']['tables'] as $table) {
             $writer->drop($table['dbName']);
         }
     }
@@ -39,27 +37,27 @@ class FunctionalTest extends BaseTest
         $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
     }
 
-//    public function testRunEmptyTable()
-//    {
-//        $this->initConfig(function () {
-//            $config = $this->defaultConfig;
-//            $tables = array_map(function ($table) {
-//                $table['items'] = array_map(function ($item) {
-//                    $item['type'] = 'IGNORE';
-//                    return $item;
-//                }, $table['items']);
-//                return $table;
-//            }, $config['parameters']['tables']);
-//            $config['parameters']['tables'] = $tables;
-//
-//            return $config;
-//        });
-//
-//        $process = new Process('php ' . ROOT_PATH . 'run.php --data=' . $this->dataDir);
-//        $process->run();
-//
-//        $this->assertEquals(0, $process->getExitCode());
-//    }
+    public function testRunThroughSSH()
+    {
+        $this->initConfig(function ($config) {
+            $config['parameters']['db']['ssh'] = [
+                'enabled' => true,
+                'keys' => [
+                    '#private' => $this->getEnv('pgsql', 'DB_SSH_KEY_PRIVATE'),
+                    'public' => $this->getEnv('pgsql', 'DB_SSH_KEY_PUBLIC')
+                ],
+                'user' => 'root',
+                'sshHost' => 'sshproxy',
+                'remoteHost' => 'pgsql',
+                'remotePort' => '5432',
+                'localPort' => '33006',
+            ];
+            return $config;
+        });
+
+        $process = $this->runProcess();
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+    }
 
     public function testTestConnection()
     {
