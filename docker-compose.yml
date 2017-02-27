@@ -26,11 +26,31 @@ services:
       POSTGRES_PASSWORD: some password
 
   sshproxy:
-    build: ./tests/env/sshproxy
+    build: ./tests/docker/sshproxy
     volumes:
-        - ./tests/env/sshproxy:/code
+        - ./tests/docker/sshproxy:/code
     working_dir: /code
     ports:
       - "2222:22"
     links:
       - pgsql
+
+  code-coverage:
+    build:
+      context: .
+      dockerfile: ./tests/docker/code-coverage/Dockerfile
+    image: keboola/db-writer-pgsql-code-coverage
+    command: "./code-coverage.sh"
+    volumes:
+      - ./:/code
+    environment:
+      CODECLIMATE_REPO_TOKEN: $CODECLIMATE_REPO_TOKEN
+      PGSQL_DB_HOST: pgsql
+      PGSQL_DB_PORT: 5432
+      PGSQL_DB_USER: postgres
+      PGSQL_DB_PASSWORD: some password
+      PGSQL_DB_DATABASE: postgres
+      PGSQL_DB_SCHEMA: public
+    links:
+      - pgsql
+      - sshproxy

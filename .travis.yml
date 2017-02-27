@@ -11,6 +11,7 @@ script:
 
 after_success:
   - docker images
+  - docker-compose run --rm code-coverage
 
 after_error:
   - docker-compose logs

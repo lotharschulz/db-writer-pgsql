@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 export PGSQL_DB_SSH_KEY_PRIVATE="-----BEGIN RSA PRIVATE KEY-----
 MIIEogIBAAKCAQEAtrRqT7d6qyPxuEDiXj+5ANooQvVP3GONhjWbnnayqHDRhkAY
@@ -33,4 +33,4 @@ export PGSQL_DB_SSH_KEY_PUBLIC="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC2tGpPt3qr
 composer selfupdate
 composer install -n
 
-./vendor/bin/phpunit --verbose --debug
+php ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml

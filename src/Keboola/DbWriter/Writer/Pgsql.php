@@ -34,14 +34,6 @@ class Pgsql extends Writer implements WriterInterface
         'json', 'jsonb'
     ];
 
-    private static $typesWithSize = [
-        'decimal', 'real', 'double precision', 'numeric',
-        'float4', 'float8',
-        'char', 'character',
-        'varchar', 'character varying',
-        'time', 'time with timezone', 'timestamp', 'timestamp with timezone', 'interval'
-    ];
-
     private $dbParams;
 
     /** @var Logger */
@@ -88,7 +80,7 @@ class Pgsql extends Writer implements WriterInterface
         return $pdo;
     }
 
-    public function isTableValid(array $table, $ignoreExport = false)
+    public function isTableValid(array $table)
     {
         // TODO: Implement isTableValid() method.
 
