@@ -106,6 +106,9 @@ class Pgsql extends Writer implements WriterInterface
             $type = strtoupper($col['type']);
             if (!empty($col['size'])) {
                 $type .= "({$col['size']})";
+                if (strtoupper($col['type']) === 'ENUM') {
+                    $type = $col['size'];
+                }
             }
             $null = $col['nullable'] ? 'NULL' : 'NOT NULL';
             $default = empty($col['default']) ? '' : "DEFAULT '{$col['default']}'";

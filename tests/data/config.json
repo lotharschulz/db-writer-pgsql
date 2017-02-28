@@ -137,6 +137,41 @@
             "default": null
           }
         ]
+      },
+      {
+        "tableId": "simple",
+        "dbName": "simple_enum",
+        "export": true,
+        "incremental": false,
+        "primaryKey": [
+          "id"
+        ],
+        "items": [
+          {
+            "name": "id",
+            "dbName": "id",
+            "type": "int",
+            "size": null,
+            "nullable": null,
+            "default": null
+          },
+          {
+            "name": "name",
+            "dbName": "name",
+            "type": "varchar",
+            "size": 255,
+            "nullable": null,
+            "default": null
+          },
+          {
+            "name": "glasses",
+            "dbName": "glasses",
+            "type": "enum",
+            "size": "glasses_enum",
+            "nullable": null,
+            "default": "no"
+          }
+        ]
       }
     ]
   }

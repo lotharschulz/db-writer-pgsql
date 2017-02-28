@@ -100,10 +100,8 @@ class PgsqlTest extends BaseTest
 
     public function testWrite()
     {
-        $tables = $this->config['parameters']['tables'];
-
         // simple table
-        $table = $tables[0];
+        $table = $this->config['parameters']['tables'][0];
         $table['incremental'] = false;
         $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
 
@@ -127,9 +125,9 @@ class PgsqlTest extends BaseTest
 
     public function testWriteNull()
     {
-        $tables = $this->config['parameters']['tables'];
-
-        // simple_null table
+        $tables = array_filter($this->config['parameters']['tables'], function ($table) {
+            return ($table['dbName'] === 'simple_null');
+        });
         $table = array_pop($tables);
         $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
 
@@ -144,6 +142,41 @@ class PgsqlTest extends BaseTest
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
         $csv = new CsvFile($resFilename);
         $csv->writeRow(["id","name","glasses","age"]);
+        foreach ($res as $row) {
+            $csv->writeRow($row);
+        }
+
+        $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
+    }
+
+    public function testWriteEnum()
+    {
+        $tables = array_filter(
+            $this->config['parameters']['tables'],
+            function ($table) {
+                return ($table['dbName'] === 'simple_enum');
+            }
+        );
+        $table = array_pop($tables);
+
+        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $this->writer->getConnection()->query(
+            "DROP TYPE glasses_enum CASCADE"
+        );
+        $this->writer->getConnection()->query(
+            "CREATE TYPE glasses_enum AS ENUM ('yes','no', 'sometimes');"
+        );
+        $this->writer->drop($table['dbName']);
+        $this->writer->create($table);
+        $this->writer->write($csvFile, $table);
+
+        $conn = $this->writer->getConnection();
+        $stmt = $conn->query("SELECT * FROM {$table['dbName']} ORDER BY id ASC");
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
+        $csv = new CsvFile($resFilename);
+        $csv->writeRow(["id","name","glasses"]);
         foreach ($res as $row) {
             $csv->writeRow($row);
         }
