@@ -31,7 +31,7 @@ class PgsqlTest extends BaseTest
         }
 
         $this->writer->getConnection()->query(
-            "DROP TYPE glasses_enum CASCADE"
+            "DROP TYPE IF EXISTS glasses_enum CASCADE"
         );
         $this->writer->getConnection()->query(
             "CREATE TYPE glasses_enum AS ENUM ('yes','no', 'sometimes');"
