@@ -29,6 +29,13 @@ class PgsqlTest extends BaseTest
         foreach ($tables as $table) {
             $this->writer->drop($table['dbName']);
         }
+
+        $this->writer->getConnection()->query(
+            "DROP TYPE glasses_enum CASCADE"
+        );
+        $this->writer->getConnection()->query(
+            "CREATE TYPE glasses_enum AS ENUM ('yes','no', 'sometimes');"
+        );
     }
 
     private function initConfig()
@@ -160,12 +167,6 @@ class PgsqlTest extends BaseTest
         $table = array_pop($tables);
 
         $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
-        $this->writer->getConnection()->query(
-            "DROP TYPE glasses_enum CASCADE"
-        );
-        $this->writer->getConnection()->query(
-            "CREATE TYPE glasses_enum AS ENUM ('yes','no', 'sometimes');"
-        );
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
         $this->writer->write($csvFile, $table);
