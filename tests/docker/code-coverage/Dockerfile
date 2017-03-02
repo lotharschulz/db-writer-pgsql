@@ -1,15 +1,7 @@
-FROM keboola/db-writer-pgsql
+FROM keboola/db-writer-pgsql:latest
 MAINTAINER Miroslav Cillik <miro@keboola.com>
 
-RUN yum install -y --enablerepo=epel,remi,remi-php56 install \
-    php-pear \
-    gcc \
-    gcc-c++ \
-    autoconf \
-    automake
-
-RUN yes | pecl install xdebug
-RUN echo "zend_extension=/usr/lib64/php/modules/xdebug.so" > /etc/php.d/xdebug.ini
+RUN pecl install xdebug-2.5.0 && docker-php-ext-enable xdebug
 
 WORKDIR /code
 
