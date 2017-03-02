@@ -151,6 +151,7 @@ class Pgsql extends Writer implements WriterInterface
                 --with truncate \
                 --with "skip header = 1" \
                 --with "fields terminated by \',\'" \
+                --with "batch rows = 1000" \
                 %s %s',
             implode(',', $fieldsArr),
             $csvFile->getPathname(),
