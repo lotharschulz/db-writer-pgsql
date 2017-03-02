@@ -157,6 +157,7 @@ class Pgsql extends Writer implements WriterInterface
             $connectionString
         );
 
+        $this->logger->info(sprintf("Uploading data into table '%s'", $table['dbName']));
         $process = new Process($pgloaderCommand);
         $process->setTimeout(null);
 
