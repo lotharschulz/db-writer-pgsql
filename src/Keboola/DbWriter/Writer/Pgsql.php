@@ -146,14 +146,13 @@ class Pgsql extends Writer implements WriterInterface
         );
 
         $pgloaderCommand = sprintf(
-            'pgloader --debug \
-                --verbose \
+            'pgloader --verbose \
                 --type csv \
                 --field "%s" \
                 --with truncate \
                 --with "skip header = 1" \
                 --with "fields terminated by \',\'" \
-                --with "batch rows = 1000" \
+                --with "batch rows = 100" \
                 %s %s',
             implode(',', $fieldsArr),
             realpath($csvFile->getPathname()),
@@ -165,7 +164,9 @@ class Pgsql extends Writer implements WriterInterface
         $process->setTimeout(null);
 
         try {
-            $process->mustRun();
+            $process->mustRun(function ($type, $buffer) {
+                $this->logger->info("pgloader: " . $type . " > " . $buffer);
+            });
         } catch (ProcessFailedException $e) {
             throw new UserException("Write process failed: " . $e->getMessage(), 400, $e);
         }
