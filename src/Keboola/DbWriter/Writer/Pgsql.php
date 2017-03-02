@@ -146,7 +146,9 @@ class Pgsql extends Writer implements WriterInterface
         );
 
         $pgloaderCommand = sprintf(
-            'pgloader --type csv \
+            'pgloader --debug \
+                --verbose \
+                --type csv \
                 --field "%s" \
                 --with truncate \
                 --with "skip header = 1" \
@@ -154,7 +156,7 @@ class Pgsql extends Writer implements WriterInterface
                 --with "batch rows = 1000" \
                 %s %s',
             implode(',', $fieldsArr),
-            $csvFile->getPathname(),
+            realpath($csvFile->getPathname()),
             $connectionString
         );
 
