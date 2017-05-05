@@ -146,13 +146,14 @@ class Pgsql extends Writer implements WriterInterface
         );
 
         $pgloaderCommand = sprintf(
-            'pgloader --verbose \
+            'pgloader --debug \
+                --client-min-messages debug \
                 --type csv \
                 --field "%s" \
                 --with truncate \
                 --with "skip header = 1" \
                 --with "fields terminated by \',\'" \
-                --with "batch rows = 100" \
+                --with "batch rows = 50000" \
                 %s %s',
             implode(',', $fieldsArr),
             realpath($csvFile->getPathname()),
