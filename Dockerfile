@@ -34,7 +34,7 @@ ADD . /code
 WORKDIR /code
 RUN echo "memory_limit = -1" >> /usr/local/etc/php/php.ini
 RUN echo "date.timezone = \"Europe/Prague\"" >> /usr/local/etc/php/php.ini
-RUN composer.phar selfupdate && composer.phar install --no-interaction
+RUN composer selfupdate && composer install --no-interaction
 
 CMD php ./run.php --data=/data
 
