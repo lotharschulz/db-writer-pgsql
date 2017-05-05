@@ -89,11 +89,15 @@ class Pgsql extends Writer implements WriterInterface
 
     public function drop($tableName)
     {
+        $this->reconnectIfDisconnected();
+
         $this->db->exec(sprintf("DROP TABLE IF EXISTS %s;", $this->escape($tableName)));
     }
 
     public function create(array $table)
     {
+        $this->reconnectIfDisconnected();
+
         $sql = sprintf(
             "CREATE TABLE %s (",
             $this->escape($table['dbName'])
@@ -175,6 +179,8 @@ class Pgsql extends Writer implements WriterInterface
 
     public function upsert(array $table, $targetTable)
     {
+        $this->reconnectIfDisconnected();
+
         $sourceTable = $this->escape($table['dbName']);
         $targetTable = $this->escape($targetTable);
 
@@ -236,6 +242,8 @@ class Pgsql extends Writer implements WriterInterface
 
     public function tableExists($tableName)
     {
+        $this->reconnectIfDisconnected();
+
         $stmt = $this->db->query(sprintf("SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s'", $tableName));
         $res = $stmt->fetchAll();
         return !empty($res);
@@ -243,6 +251,8 @@ class Pgsql extends Writer implements WriterInterface
 
     private function execQuery($query)
     {
+        $this->reconnectIfDisconnected();
+
         $this->logger->info(sprintf("Executing query '%s'", $query));
         $this->db->exec($query);
     }
@@ -270,5 +280,16 @@ class Pgsql extends Writer implements WriterInterface
     public function generateTmpName($tableName)
     {
         return $tableName . '_temp_' . uniqid();
+    }
+
+    private function reconnectIfDisconnected()
+    {
+        try {
+            $this->logger->info("Test if connection active");
+            $this->db->query('select current_date')->execute();
+        } catch (\PDOException $e) {
+            $this->logger->info("Reconnecting to DB");
+            $this->db = $this->createConnection($this->dbParams);
+        }
     }
 }
