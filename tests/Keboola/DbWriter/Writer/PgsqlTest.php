@@ -103,6 +103,15 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll();
 
         $this->assertEquals('simple', $res[0]['table_name']);
+
+        foreach ($tables as $table) {
+            if (empty($table['primaryKey'])) {
+                $table['primaryKey'] = [];
+            }
+
+            $primaryKey = $this->writer->tablePrimaryKey($table['dbName']);
+            $this->assertEquals($table['primaryKey'], $primaryKey);
+        }
     }
 
     public function testWrite()
