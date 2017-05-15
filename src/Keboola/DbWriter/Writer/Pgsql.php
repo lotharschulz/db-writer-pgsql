@@ -122,7 +122,21 @@ class Pgsql extends Writer implements WriterInterface
             $sql .= "{$this->escape($col['dbName'])} $type $null $default";
             $sql .= ',';
         }
+
+		if (!empty($table['primaryKey'])) {
+			$writer = $this;
+			$sql .= PHP_EOL . sprintf(
+					"PRIMARY KEY (%s)",
+					implode(',', array_map(function($col) use ($writer) {
+						return $writer->escape($col);
+					}, $table['primaryKey']))
+				) . PHP_EOL;
+
+			$sql .= ',';
+		}
+
         $sql = substr($sql, 0, -1);
+
         $sql .= ");";
 
         $this->execQuery($sql);
@@ -252,8 +266,9 @@ class Pgsql extends Writer implements WriterInterface
     private function execQuery($query)
     {
         $this->reconnectIfDisconnected();
+		$logQuery = trim(preg_replace('/\s+/', ' ', $query));
 
-        $this->logger->info(sprintf("Executing query '%s'", $query));
+        $this->logger->info(sprintf("Executing query '%s'", $logQuery));
         $this->db->exec($query);
     }
 
@@ -262,6 +277,26 @@ class Pgsql extends Writer implements WriterInterface
         throw new ApplicationException("Method not implemented");
     }
 
+    public function tablePrimaryKey($tableName)
+    {
+        $query = "
+            SELECT
+                c.column_name
+            FROM
+                INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+            JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE AS ccu USING (CONSTRAINT_SCHEMA, CONSTRAINT_NAME)
+            JOIN INFORMATION_SCHEMA.COLUMNS AS c ON c.TABLE_SCHEMA = tc.CONSTRAINT_SCHEMA
+                AND tc.TABLE_NAME = c.TABLE_NAME AND ccu.COLUMN_NAME = c.COLUMN_NAME
+            WHERE CONSTRAINT_TYPE = 'PRIMARY KEY' AND tc.TABLE_NAME = '%s';
+        ";
+
+        $stmt = $this->db->query(sprintf($query, $tableName));
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return array_map(function($row) {
+            return $row['column_name'];
+        }, $res);
+    }
     public function getTableInfo($tableName)
     {
         throw new ApplicationException("Method not implemented");
