@@ -231,6 +231,7 @@ class Pgsql extends Writer implements WriterInterface
             // update data
             $joinClauseArr = [];
             foreach ($table['primaryKey'] as $index => $value) {
+                $value = $this->escape($value);
                 $joinClauseArr[] = "{$targetTable}.{$value}={$sourceTable}.{$value}";
             }
             $joinClause = implode(' AND ', $joinClauseArr);
