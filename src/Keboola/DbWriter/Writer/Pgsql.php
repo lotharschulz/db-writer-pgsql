@@ -153,6 +153,10 @@ class Pgsql extends Writer implements WriterInterface
             $fieldsArr[] = $field;
         }
 
+        // truncate table - not as pgloader parameter due escaping bug
+        $sql = sprintf("TRUNCATE %s;", $this->escape($table['dbName']));
+        $this->execQuery($sql);
+
         $connectionString = sprintf(
             'postgres://%s:"%s"@%s:%s/%s?tablename=%s',
             $this->dbParams['user'],
@@ -166,10 +170,11 @@ class Pgsql extends Writer implements WriterInterface
         $pgloaderCommand = sprintf(
             'pgloader --debug \
                 --client-min-messages debug \
+                --on-error-stop \
                 --type csv \
                 --field "%s" \
-                --with truncate \
                 --with "skip header = 1" \
+                --with "quote identifiers" \
                 --with "fields terminated by \',\'" \
                 --with "batch rows = 50000" \
                 %s %s',
@@ -183,9 +188,24 @@ class Pgsql extends Writer implements WriterInterface
         $process->setTimeout(null);
 
         try {
-            $process->mustRun(function ($type, $buffer) {
-                $this->logger->info("pgloader: " . $type . " > " . $buffer);
+            $errors = (object) ['count' => 0];
+            $process->mustRun(function ($type, $buffer) use($errors) {
+                $matches = [];
+                $regExDate = '\d{4}-[01]{1}\d{1}-[0-3]{1}\d{1}T[0-2]{1}\d{1}:[0-6]{1}\d{1}:[0-6]{1}\d{1}\.[0-9]{6}Z';
+                if (preg_match(sprintf('/^(%s) (\w+) (.+)/ui', $regExDate), $buffer, $matches)) {
+
+                    if ($matches[2] === 'FATAL' || $matches[2] === 'ERROR') {
+                        $this->logger->error(sprintf("PGLOADER: %s", $matches[3]));
+                        $errors->count += 1;
+                    } else {
+                        $this->logger->info(sprintf("PGLOADER:%s: %s", $matches[2], $matches[3]));
+                    }
+                }
             });
+
+            if ($errors->count > 0) {
+                throw new UserException("Pgloader failed: ", 400);
+            }
         } catch (ProcessFailedException $e) {
             throw new UserException("Write process failed: " . $e->getMessage(), 400, $e);
         }
@@ -211,6 +231,7 @@ class Pgsql extends Writer implements WriterInterface
             // update data
             $joinClauseArr = [];
             foreach ($table['primaryKey'] as $index => $value) {
+                $value = $this->escape($value);
                 $joinClauseArr[] = "{$targetTable}.{$value}={$sourceTable}.{$value}";
             }
             $joinClause = implode(' AND ', $joinClauseArr);
@@ -320,7 +341,6 @@ class Pgsql extends Writer implements WriterInterface
     private function reconnectIfDisconnected()
     {
         try {
-            $this->logger->info("Test if connection active");
             $this->db->query('select current_date')->execute();
         } catch (\PDOException $e) {
             $this->logger->info("Reconnecting to DB");
