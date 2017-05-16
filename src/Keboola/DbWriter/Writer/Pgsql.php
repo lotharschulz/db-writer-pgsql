@@ -341,7 +341,6 @@ class Pgsql extends Writer implements WriterInterface
     private function reconnectIfDisconnected()
     {
         try {
-            $this->logger->info("Test if connection active");
             $this->db->query('select current_date')->execute();
         } catch (\PDOException $e) {
             $this->logger->info("Reconnecting to DB");
