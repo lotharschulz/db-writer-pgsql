@@ -259,6 +259,10 @@ class PgsqlTest extends BaseTest
         $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . "_increment"));
         $this->writer->create($table);
         $this->writer->write($csvFile2, $table);
+
+        $primaryKey = $this->writer->tablePrimaryKey($table['dbName']);
+        $this->assertEquals($table['primaryKey'], $primaryKey);
+
         $this->writer->upsert($table, $targetTable['dbName']);
 
         $stmt = $conn->query("SELECT * FROM {$targetTable['dbName']} ORDER BY id ASC");
@@ -273,9 +277,6 @@ class PgsqlTest extends BaseTest
 
         $expectedFilename = $this->getInputCsv($table['tableId'] . "_merged");
         $this->assertFileEquals($expectedFilename, $resFilename);
-
-        $primaryKey = $this->writer->tablePrimaryKey($table['dbName']);
-        $this->assertEquals($table['primaryKey'], $primaryKey);
     }
 
 
@@ -303,7 +304,7 @@ class PgsqlTest extends BaseTest
 
 
         $targetTable = $table;
-        $table['dbName'] .= $table['incremental']?'_temp_' . uniqid():'';
+        $table['dbName'] .= $table['incremental'] ? '_temp_' . uniqid() : '';
 
         // first write
         $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
@@ -315,6 +316,10 @@ class PgsqlTest extends BaseTest
         $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . "_increment"));
         $this->writer->create($table);
         $this->writer->write($csvFile2, $table);
+
+        $primaryKey = $this->writer->tablePrimaryKey($table['dbName']);
+        $this->assertEquals($table['primaryKey'], $primaryKey);
+
         $this->writer->upsert($table, $targetTable['dbName']);
 
         $stmt = $conn->query("SELECT * FROM \"{$targetTable['dbName']}\" ORDER BY \"Id\" ASC");
@@ -329,8 +334,5 @@ class PgsqlTest extends BaseTest
 
         $expectedFilename = $this->getInputCsv($table['tableId'] . "_merged_ucfirst");
         $this->assertFileEquals($expectedFilename, $resFilename);
-
-        $primaryKey = $this->writer->tablePrimaryKey($table['dbName']);
-        $this->assertEquals($table['primaryKey'], $primaryKey);
     }
 }
