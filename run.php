@@ -1,10 +1,9 @@
 <?php
 
-use Keboola\DbWriter\Application;
+use Keboola\DbWriter\Pgsql\Application;
 use Keboola\DbWriter\Exception\ApplicationException;
 use Keboola\DbWriter\Exception\UserException;
 use Keboola\DbWriter\Logger;
-use Keboola\DbWriter\Pgsql\Configuration\ConfigDefinition;
 use Monolog\Handler\NullHandler;
 
 define('APP_NAME', 'wr-db-pgsql');
@@ -27,7 +26,7 @@ try {
 
     $action = isset($config['action']) ? $config['action'] : $action;
 
-    $app = new Application($config, $logger, new ConfigDefinition());
+    $app = new Application($config, $logger);
 
     if ($action !== 'run') {
         $app['logger']->setHandlers(array(new NullHandler(Logger::INFO)));
