@@ -1,6 +1,5 @@
 # Postgre SQL DB Writer
 
-[![Docker Repository on Quay](https://quay.io/repository/keboola/db-writer-pgsql/status "Docker Repository on Quay")](https://quay.io/repository/keboola/db-writer-pgsql)
 [![Build Status](https://travis-ci.org/keboola/db-writer-pgsql.svg?branch=master)](https://travis-ci.org/keboola/db-writer-pgsql)
 [![Code Climate](https://codeclimate.com/github/keboola/db-writer-pgsql/badges/gpa.svg)](https://codeclimate.com/github/keboola/db-writer-pgsql)
 [![Test Coverage](https://codeclimate.com/github/keboola/db-writer-pgsql/badges/coverage.svg)](https://codeclimate.com/github/keboola/db-writer-pgsql/coverage)
