@@ -189,8 +189,11 @@ class Pgsql extends Writer implements WriterInterface
 
         try {
             $errors = (object) ['count' => 0];
-            $process->mustRun(function ($type, $buffer) use($errors) {
+            $password = $this->dbParams['password'];
+            $process->mustRun(function ($type, $buffer) use($errors, $password) {
                 $matches = [];
+                $buffer = str_replace($password, '*SECRET*', $buffer);
+
                 $regExDate = '\d{4}-[01]{1}\d{1}-[0-3]{1}\d{1}T[0-2]{1}\d{1}:[0-6]{1}\d{1}:[0-6]{1}\d{1}\.[0-9]{6}Z';
                 if (preg_match(sprintf('/^(%s) (\w+) (.+)/ui', $regExDate), $buffer, $matches)) {
 
