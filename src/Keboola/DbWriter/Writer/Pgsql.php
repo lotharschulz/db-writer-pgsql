@@ -90,7 +90,17 @@ class Pgsql extends Writer implements WriterInterface
     public function drop($tableName)
     {
         $this->reconnectIfDisconnected();
-
+        $stmt = $this->db->prepare(
+            "select count(*) 
+            from pg_locks l, pg_stat_all_tables t where l.relation=t.relid
+            and relname = :tablename
+            group by relation;"
+        );
+        $stmt->execute([$tableName]);
+        $locks = $stmt->fetch()[0];
+        if ($locks > 0) {
+            $this->logger->info("Table \"$tableName\" is locked by $locks transactions, waiting for them to finish");
+        }
         $this->db->exec(sprintf("DROP TABLE IF EXISTS %s;", $this->escape($tableName)));
     }
 
