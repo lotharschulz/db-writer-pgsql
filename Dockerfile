@@ -8,7 +8,7 @@ RUN apt-get install -y patch unzip libsqlite3-dev gawk freetds-dev subversion
 RUN apt-get install -y postgresql-server-dev-all
 
 # PHP
-RUN docker-php-ext-install pdo pdo_pgsql
+RUN docker-php-ext-install pdo pdo_pgsql pgsql
 
 # CCL
 WORKDIR /usr/local/src
