@@ -77,6 +77,53 @@ class LogTest extends BaseTest
         return sprintf($this->dataDir . "/in/tables/%s.csv", $tableId);
     }
 
+    public function testDropLock()
+    {
+        // simple table
+        $table = $this->config['parameters']['tables'][0];
+
+        // create connection for async query
+        $dbParams = $this->config['parameters']['db'];
+
+        $dsn = sprintf(
+            'host=%s port=%s dbname=%s user=%s password=%s',
+            $dbParams['host'],
+            $dbParams['port'],
+            $dbParams['database'],
+            $dbParams['user'],
+            str_replace(' ', '\\ ', $dbParams['password'])
+        );
+
+        $connection = pg_connect($dsn);
+
+        // test lock
+        $this->writer->create($table);
+
+        pg_send_query($connection, "
+            begin;
+            lock simple in EXCLUSIVE mode;
+            select pg_sleep(60);
+            commit;
+        ");
+
+        $this->writer->drop($table['dbName']);
+
+        $checkFound = false;
+        foreach ($this->logHandler->getRecords() as $logHandler) {
+            $this->assertArrayHasKey('message', $logHandler);
+
+            if (strpos($logHandler['message'], 'is locked by 1 transactions') === false) {
+                continue;
+            }
+
+            if (strpos($logHandler['message'], $table['dbName']) !== false) {
+                $checkFound = true;
+            }
+        }
+
+        $this->assertTrue($checkFound);
+    }
+
     public function testDropTable()
     {
         // simple table
