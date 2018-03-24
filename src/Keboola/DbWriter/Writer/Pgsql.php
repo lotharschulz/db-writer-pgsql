@@ -101,7 +101,8 @@ class Pgsql extends Writer implements WriterInterface
         if ($locks > 0) {
             $this->logger->info("Table \"$tableName\" is locked by $locks transactions, waiting for them to finish");
         }
-        $this->db->exec(sprintf("DROP TABLE IF EXISTS %s;", $this->escape($tableName)));
+
+        $this->execQuery(sprintf("DROP TABLE IF EXISTS %s;", $this->escape($tableName)));
     }
 
     public function create(array $table)
