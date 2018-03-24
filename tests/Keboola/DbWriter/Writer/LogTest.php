@@ -41,6 +41,8 @@ class LogTest extends BaseTest
         $this->writer->getConnection()->query(
             "CREATE TYPE glasses_enum AS ENUM ('yes','no', 'sometimes');"
         );
+
+        $this->logHandler->clear();
     }
 
     private function initConfig()
@@ -73,6 +75,29 @@ class LogTest extends BaseTest
     private function getInputCsv($tableId)
     {
         return sprintf($this->dataDir . "/in/tables/%s.csv", $tableId);
+    }
+
+    public function testDropTable()
+    {
+        // simple table
+        $table = $this->config['parameters']['tables'][0];
+
+        $this->writer->drop($table['dbName']);
+
+        $dropFound = false;
+        foreach ($this->logHandler->getRecords() as $logHandler) {
+            $this->assertArrayHasKey('message', $logHandler);
+
+            if (strpos($logHandler['message'], 'DROP TABLE IF EXISTS') === false) {
+                continue;
+            }
+
+            if (strpos($logHandler['message'], $table['dbName']) !== false) {
+                $dropFound = true;
+            }
+        }
+
+        $this->assertTrue($dropFound);
     }
 
     public function testRemovePassword()
