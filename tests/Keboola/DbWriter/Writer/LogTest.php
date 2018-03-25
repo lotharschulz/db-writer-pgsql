@@ -95,16 +95,21 @@ class LogTest extends BaseTest
         );
 
         $connection = pg_connect($dsn);
+        if (!$connection) {
+            $this->fail(sprintf('pg_connect failed'));
+        }
 
         // test lock
         $this->writer->create($table);
 
-        pg_send_query($connection, "
+        $result = pg_send_query($connection, "
             begin;
             lock simple in EXCLUSIVE mode;
             select pg_sleep(60);
             commit;
         ");
+
+        $this->assertTrue($result, 'send batch query via pg_send_query failed');
 
         $this->writer->drop($table['dbName']);
 
