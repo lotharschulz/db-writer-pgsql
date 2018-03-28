@@ -24,6 +24,9 @@ class LogTest extends BaseTest
     /** @var TestHandler */
     private $logHandler;
 
+    /** @var Logger */
+    private $logger;
+
     public function setUp()
     {
         $this->logHandler = new TestHandler();
@@ -67,7 +70,9 @@ class LogTest extends BaseTest
         $writerFactory = new WriterFactory($parameters);
 
         $logger = new Logger(APP_NAME);
-        $logger->setHandlers([$this->logHandler]);
+        $logger->pushHandler($this->logHandler);
+
+        $this->logger = $logger;
 
         return $writerFactory->create($logger);
     }
@@ -105,7 +110,7 @@ class LogTest extends BaseTest
         $result = pg_send_query($connection, "
             begin;
             lock simple in EXCLUSIVE mode;
-            select pg_sleep(60);
+            select pg_sleep(30);
             commit;
         ");
 
@@ -163,10 +168,16 @@ class LogTest extends BaseTest
         $this->writer->create($table);
         $this->writer->write($csvFile, $table);
 
+        // TARGET destination is not logged everytime
+        $logHasTarget = false;
         $passwordFound = false;
         $replaceFound = false;
         foreach ($this->logHandler->getRecords() as $logHandler) {
             $this->assertArrayHasKey('message', $logHandler);
+
+            if (strpos($logHandler['message'],  'TARGET') !== false) {
+                $logHasTarget = true;
+            }
 
             if (strpos($logHandler['message'],  $this->config['parameters']['db']['#password']) !== false) {
                 $passwordFound = true;
@@ -177,7 +188,13 @@ class LogTest extends BaseTest
             }
         }
 
-        $this->assertTrue($replaceFound);
         $this->assertFalse($passwordFound);
+
+        if ($logHasTarget) {
+            $this->assertTrue($replaceFound);
+            $this->logger->info('Pgloader does not contain TARGET INFO');
+        } else {
+            $this->logger->info('Pgloader log contains TARGET INFO');
+        }
     }
 }
