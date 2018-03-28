@@ -19,8 +19,6 @@ RUN cp /usr/local/src/ccl/scripts/ccl64 /usr/local/bin/ccl
 WORKDIR /opt/src/
 RUN git clone https://github.com/dimitri/pgloader.git
 WORKDIR /opt/src/pgloader
-CMD php ./run.php --data=/data
-
 RUN git checkout a603cd8
 
 WORKDIR /opt/src/pgloader
