@@ -3,7 +3,7 @@ MAINTAINER Miroslav Cillik <miro@keboola.com>
 
 # Deps
 RUN apt-get update
-RUN apt-get install -y wget curl make git bzip2 time libzip-dev libssl1.0.0 openssl
+RUN apt-get install -y wget curl make git bzip2 time libzip-dev openssl
 RUN apt-get install -y patch unzip libsqlite3-dev gawk freetds-dev subversion
 RUN apt-get install -y postgresql-server-dev-all
 

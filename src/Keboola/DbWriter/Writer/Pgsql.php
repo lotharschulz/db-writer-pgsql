@@ -214,6 +214,8 @@ class Pgsql extends Writer implements WriterInterface
                     } else {
                         $this->logger->info(sprintf("PGLOADER:%s: %s", $matches[2], $matches[3]));
                     }
+                } else {
+                    $this->logger->info(sprintf("PGLOADER RAW: %s", $buffer));
                 }
             });
 
