@@ -19,7 +19,7 @@ RUN cp /usr/local/src/ccl/scripts/ccl64 /usr/local/bin/ccl
 WORKDIR /opt/src/
 RUN git clone https://github.com/dimitri/pgloader.git
 WORKDIR /opt/src/pgloader
-RUN git checkout a603cd8
+RUN git checkout 63af7e7
 
 WORKDIR /opt/src/pgloader
 RUN mkdir -p build/bin
