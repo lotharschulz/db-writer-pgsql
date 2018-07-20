@@ -159,6 +159,13 @@ class PgsqlTest extends BaseTest
         $csv = new CsvFile($resFilename);
         $csv->writeRow(["id","name","glasses","age"]);
         foreach ($res as $row) {
+            if (isset($row['glasses']) && $row['glasses'] === null) {
+                $this->fail('Non nullable column cannot contains null value');
+            }
+            if (isset($row['age']) && $row['age'] === "") {
+                $this->fail('Nullable column cannot contains empty string value');
+            }
+
             $csv->writeRow($row);
         }
 
@@ -334,5 +341,31 @@ class PgsqlTest extends BaseTest
 
         $expectedFilename = $this->getInputCsv($table['tableId'] . "_merged_ucfirst");
         $this->assertFileEquals($expectedFilename, $resFilename);
+    }
+
+    public function testWriteText()
+    {
+        $tables = array_filter($this->config['parameters']['tables'], function ($table) {
+            return ($table['dbName'] === 'simple_text');
+        });
+        $table = array_pop($tables);
+        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+
+        $this->writer->drop($table['dbName']);
+        $this->writer->create($table);
+        $this->writer->write($csvFile, $table);
+
+        $conn = $this->writer->getConnection();
+        $stmt = $conn->query("SELECT * FROM {$table['dbName']} ORDER BY id ASC");
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
+        $csv = new CsvFile($resFilename);
+        $csv->writeRow(["id","name","description"]);
+        foreach ($res as $row) {
+            $csv->writeRow($row);
+        }
+
+        $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
     }
 }

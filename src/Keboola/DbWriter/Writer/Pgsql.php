@@ -118,13 +118,7 @@ class Pgsql extends Writer implements WriterInterface
             return (strtolower($item['type']) !== 'ignore');
         });
         foreach ($columns as $col) {
-            $type = strtoupper($col['type']);
-            if (!empty($col['size'])) {
-                $type .= "({$col['size']})";
-                if (strtoupper($col['type']) === 'ENUM') {
-                    $type = $col['size'];
-                }
-            }
+            $type = $this->getColumnDataTypeSql($col);
             $null = $col['nullable'] ? 'NULL' : 'NOT NULL';
             $default = empty($col['default']) ? '' : "DEFAULT '{$col['default']}'";
             if ($type == 'TEXT') {
@@ -153,78 +147,107 @@ class Pgsql extends Writer implements WriterInterface
         $this->execQuery($sql);
     }
 
+    private function createStage(array $table)
+    {
+        $sqlColumns = array_map(function ($col) {
+            if (strtolower($col['type']) === 'text') {
+                return sprintf(
+                    "%s TEXT NULL",
+                    $this->escape($col['dbName'])
+                );
+            } else {
+                return sprintf(
+                    "%s %s NULL",
+                    $this->escape($col['dbName']),
+                    $this->getStageColumnDataTypeSql($col)
+                );
+            }
+        }, array_filter($table['items'], function ($item) {
+            return (strtolower($item['type']) !== 'ignore');
+        }));
+
+        $this->execQuery(sprintf(
+            "CREATE TABLE %s (%s)",
+            $this->escape($table['dbName']),
+            implode(',', $sqlColumns)
+        ));
+    }
+
     public function write(CsvFile $csvFile, array $table)
     {
+        $this->logger->info("Using PSQL");
+
+        // create staging table
+        $stagingTable = $table;
+        $stagingTable['dbName'] = $this->generateTmpName($table['dbName']);
+        $this->drop($stagingTable['dbName']);
+        $this->createStage($stagingTable);
+
         $fieldsArr = [];
-        foreach ($table['items'] as $column) {
-            $field = $column['dbName'];
-            if (boolval($column['nullable'])) {
-                $field .= ' [null if blanks]';
-            }
-            $fieldsArr[] = $field;
+        foreach ($stagingTable['items'] as $column) {
+            $fieldsArr[] = $this->escape($column['dbName']);
         }
 
-        // truncate table - not as pgloader parameter due escaping bug
-        $sql = sprintf("TRUNCATE %s;", $this->escape($table['dbName']));
-        $this->execQuery($sql);
+        $copyQuery = escapeshellarg(sprintf(
+            "\COPY %s (%s) FROM '%s' WITH CSV HEADER DELIMITER ',' QUOTE '\"';",
+            $this->escape($this->dbParams['schema']) . '.' . $this->escape($stagingTable['dbName']),
+            implode(',', $fieldsArr),
+            realpath($csvFile->getPathname())
+        ));
 
-        $connectionString = sprintf(
-            'postgres://%s:"%s"@%s:%s/%s?tablename=%s',
-            $this->dbParams['user'],
-            $this->dbParams['password'],
+        $psqlCommand = sprintf(
+            'psql -h %s -p %s -U %s -d %s -w -c %s;',
             $this->dbParams['host'],
             $this->dbParams['port'],
+            $this->dbParams['user'],
             $this->dbParams['database'],
-            $this->escape($this->dbParams['schema']) . '.' . $this->escape($table['dbName'])
+            $copyQuery
         );
 
-        $pgloaderCommand = sprintf(
-            'pgloader --debug \
-                --client-min-messages debug \
-                --on-error-stop \
-                --type csv \
-                --field "%s" \
-                --with "skip header = 1" \
-                --with "quote identifiers" \
-                --with "fields terminated by \',\'" \
-                --with "batch rows = 50000" \
-                %s %s',
-            implode(',', $fieldsArr),
-            realpath($csvFile->getPathname()),
-            $connectionString
-        );
-
-        $this->logger->info(sprintf("Uploading data into table '%s'", $table['dbName']));
-        $process = new Process($pgloaderCommand);
-        $process->setTimeout(null);
+        $this->logger->info(sprintf("Uploading data into staging table '%s'", $stagingTable['dbName']));
 
         try {
-            $errors = (object) ['count' => 0];
-            $password = $this->dbParams['password'];
-            $process->mustRun(function ($type, $buffer) use($errors, $password) {
-                $matches = [];
-                $buffer = str_replace($password, '*SECRET*', $buffer);
+            $process = new Process($psqlCommand, null, ['PGPASSWORD' => $this->dbParams['password']]);
+            $process->setTimeout(null);
 
-                $regExDate = '\d{4}-[01]{1}\d{1}-[0-3]{1}\d{1}T[0-2]{1}\d{1}:[0-6]{1}\d{1}:[0-6]{1}\d{1}\.[0-9]{6}Z';
-                if (preg_match(sprintf('/^(%s) (\w+) (.+)/ui', $regExDate), $buffer, $matches)) {
+            $process->run();
 
-                    if ($matches[2] === 'FATAL' || $matches[2] === 'ERROR') {
-                        $this->logger->error(sprintf("PGLOADER: %s", $matches[3]));
-                        $errors->count += 1;
-                    } else {
-                        $this->logger->info(sprintf("PGLOADER:%s: %s", $matches[2], $matches[3]));
-                    }
-                } else {
-                    $this->logger->info(sprintf("PGLOADER RAW: %s", $buffer));
-                }
-            });
-
-            if ($errors->count > 0) {
-                throw new UserException("Pgloader failed: ", 400);
+            if ($process->isSuccessful()) {
+                $this->logger->info($process->getOutput());
+                $this->logger->info(sprintf("Data imported into staging table '%s'", $stagingTable['dbName']));
+            } else {
+                throw new UserException("Write process failed: " . $process->getErrorOutput(), 400);
             }
-        } catch (ProcessFailedException $e) {
-            throw new UserException("Write process failed: " . $e->getMessage(), 400, $e);
+
+            // move to destination table
+            $this->logger->info("Moving to destination table");
+            $columns = [];
+            foreach ($table['items'] as $col) {
+                $type = $this->getColumnDataTypeSql($col);
+                $colName = $this->escape($col['dbName']);
+                $srcColName = $colName;
+                if (!empty($col['nullable'])) {
+                    $srcColName = sprintf("NULLIF(%s, '')", $colName);
+                }
+                $column = sprintf('CAST(%s AS %s) as %s', $srcColName, $type, $colName);
+                $columns[] = $column;
+            }
+            $query = sprintf(
+                'INSERT INTO %s SELECT %s FROM %s',
+                $this->escape($table['dbName']),
+                implode(',', $columns),
+                $this->escape($stagingTable['dbName'])
+            );
+            $this->execQuery($query);
+
+            $this->logger->info(sprintf("Data moved into table '%s'", $table['dbName']));
+        } catch (\Exception $e) {
+            $this->drop($stagingTable['dbName']);
+            throw $e;
         }
+
+        // drop staging
+        $this->drop($stagingTable['dbName']);
     }
 
     public function upsert(array $table, $targetTable)
@@ -334,6 +357,7 @@ class Pgsql extends Writer implements WriterInterface
             return $row['column_name'];
         }, $res);
     }
+
     public function getTableInfo($tableName)
     {
         throw new ApplicationException("Method not implemented");
@@ -361,6 +385,36 @@ class Pgsql extends Writer implements WriterInterface
         } catch (\PDOException $e) {
             $this->logger->info("Reconnecting to DB");
             $this->db = $this->createConnection($this->dbParams);
+        }
+    }
+
+    private function getColumnDataTypeSql(array $columnDefinition)
+    {
+        $type = strtoupper($columnDefinition['type']);
+
+        if (!empty($columnDefinition['size'])) {
+            $type .= "({$columnDefinition['size']})";
+
+            if (strtoupper($columnDefinition['type']) === 'ENUM') {
+                $type = $columnDefinition['size'];
+            }
+        }
+
+        return $type;
+    }
+
+    private function getStageColumnDataTypeSql(array $columnDefinition)
+    {
+        if (strtolower($columnDefinition['type']) === 'text') {
+            return 'TEXT';
+        }
+        else {
+            $isTextType = strstr(strtolower($columnDefinition['type']), 'char') !== false;
+
+            return sprintf(
+                "VARCHAR(%s)",
+                ($isTextType && !empty($columnDefinition['size'])) ? $columnDefinition['size'] : '255'
+            );
         }
     }
 }
