@@ -318,7 +318,11 @@ class Pgsql extends Writer implements WriterInterface
     {
         $this->reconnectIfDisconnected();
 
-        $stmt = $this->db->query(sprintf("SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s'", $tableName));
+        $stmt = $this->db->query(sprintf(
+            "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s'",
+            $this->dbParams['schema'],
+            $tableName
+        ));
         $res = $stmt->fetchAll();
         return !empty($res);
     }
@@ -347,10 +351,10 @@ class Pgsql extends Writer implements WriterInterface
             JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE AS ccu USING (CONSTRAINT_SCHEMA, CONSTRAINT_NAME)
             JOIN INFORMATION_SCHEMA.COLUMNS AS c ON c.TABLE_SCHEMA = tc.CONSTRAINT_SCHEMA
                 AND tc.TABLE_NAME = c.TABLE_NAME AND ccu.COLUMN_NAME = c.COLUMN_NAME
-            WHERE CONSTRAINT_TYPE = 'PRIMARY KEY' AND tc.TABLE_NAME = '%s';
+            WHERE CONSTRAINT_TYPE = 'PRIMARY KEY' AND tc.TABLE_SCHEMA = '%s' AND tc.TABLE_NAME = '%s';
         ";
 
-        $stmt = $this->db->query(sprintf($query, $tableName));
+        $stmt = $this->db->query(sprintf($query, $this->dbParams['schema'], $tableName));
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         return array_map(function($row) {
