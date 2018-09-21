@@ -31,7 +31,8 @@ class Pgsql extends Writer implements WriterInterface
         'bytea',
         'date', 'time', 'time with timezone', 'timestamp', 'timestamp with timezone', 'interval',
         'enum',
-        'json', 'jsonb'
+        'json', 'jsonb',
+        'integer[]',
     ];
 
     private $dbParams;
