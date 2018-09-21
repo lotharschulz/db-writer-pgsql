@@ -412,6 +412,9 @@ class Pgsql extends Writer implements WriterInterface
         if (strtolower($columnDefinition['type']) === 'text') {
             return 'TEXT';
         }
+        else if (strpos($columnDefinition['type'], '[]') !== false) {
+            return $columnDefinition['type'];
+        }
         else {
             $isTextType = strstr(strtolower($columnDefinition['type']), 'char') !== false;
 
