@@ -230,7 +230,7 @@
             "dbName": "description",
             "type": "integer[]",
             "size": null,
-            "nullable": null,
+            "nullable": true,
             "default": null
           }
         ]
