@@ -207,6 +207,33 @@
             "default": null
           }
         ]
+      },
+      {
+        "tableId": "integer_array",
+        "dbName": "integer_array",
+        "export": true,
+        "incremental": false,
+        "primaryKey": [
+          "id"
+        ],
+        "items": [
+          {
+            "name": "id",
+            "dbName": "id",
+            "type": "int",
+            "size": null,
+            "nullable": null,
+            "default": null
+          },
+          {
+            "name": "description",
+            "dbName": "description",
+            "type": "integer[]",
+            "size": null,
+            "nullable": true,
+            "default": null
+          }
+        ]
       }
     ]
   }

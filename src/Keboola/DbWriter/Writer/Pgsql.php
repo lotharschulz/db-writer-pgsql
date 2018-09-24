@@ -31,7 +31,8 @@ class Pgsql extends Writer implements WriterInterface
         'bytea',
         'date', 'time', 'time with timezone', 'timestamp', 'timestamp with timezone', 'interval',
         'enum',
-        'json', 'jsonb'
+        'json', 'jsonb',
+        'integer[]',
     ];
 
     private $dbParams;
@@ -409,15 +410,15 @@ class Pgsql extends Writer implements WriterInterface
 
     private function getStageColumnDataTypeSql(array $columnDefinition)
     {
-        if (strtolower($columnDefinition['type']) === 'text') {
+        $type = strtolower($columnDefinition['type']);
+        if ($type === 'text' || strpos($type, '[]') !== false) {
             return 'TEXT';
-        }
-        else {
-            $isTextType = strstr(strtolower($columnDefinition['type']), 'char') !== false;
+        } else {
+            $isCharacterType = strstr(strtolower($columnDefinition['type']), 'char') !== false;
 
             return sprintf(
                 "VARCHAR(%s)",
-                ($isTextType && !empty($columnDefinition['size'])) ? $columnDefinition['size'] : '255'
+                ($isCharacterType && !empty($columnDefinition['size'])) ? $columnDefinition['size'] : '255'
             );
         }
     }
