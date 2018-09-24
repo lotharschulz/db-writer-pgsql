@@ -410,18 +410,15 @@ class Pgsql extends Writer implements WriterInterface
 
     private function getStageColumnDataTypeSql(array $columnDefinition)
     {
-        if (strtolower($columnDefinition['type']) === 'text') {
+        $type = strtolower($columnDefinition['type']);
+        if ($type === 'text' || strpos($type, '[]') !== false) {
             return 'TEXT';
-        }
-        else if (strpos($columnDefinition['type'], '[]') !== false) {
-            return $columnDefinition['type'];
-        }
-        else {
-            $isTextType = strstr(strtolower($columnDefinition['type']), 'char') !== false;
+        } else {
+            $isCharacterType = strstr(strtolower($columnDefinition['type']), 'char') !== false;
 
             return sprintf(
                 "VARCHAR(%s)",
-                ($isTextType && !empty($columnDefinition['size'])) ? $columnDefinition['size'] : '255'
+                ($isCharacterType && !empty($columnDefinition['size'])) ? $columnDefinition['size'] : '255'
             );
         }
     }
