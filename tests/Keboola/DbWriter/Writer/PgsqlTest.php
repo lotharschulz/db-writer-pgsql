@@ -369,6 +369,78 @@ class PgsqlTest extends BaseTest
         $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
     }
 
+    public function testWriteJson()
+    {
+        $tables = array_filter($this->config['parameters']['tables'], function ($table) {
+            return ($table['dbName'] === 'json_type');
+        });
+        $table = array_pop($tables);
+        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+
+        $this->writer->drop($table['dbName']);
+        $this->writer->create($table);
+        $this->writer->write($csvFile, $table);
+
+        $conn = $this->writer->getConnection();
+        $stmt = $conn->query("SELECT * FROM {$table['dbName']} ORDER BY id ASC");
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
+        $csv = new CsvFile($resFilename);
+        $csv->writeRow(["id","name","test"]);
+        foreach ($res as $row) {
+            $csv->writeRow($row);
+        }
+
+        $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
+
+        $stmt = $conn->query("SELECT test->'name' as name FROM {$table['dbName']} WHERE test->'name' IS NOT NULL");
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $this->assertCount(1, $res);
+        $this->assertEquals('"Ondrej"', $res[0]['name']);
+    }
+
+    public function testWriteJsonB()
+    {
+        $tables = array_filter($this->config['parameters']['tables'], function ($table) {
+            return ($table['dbName'] === 'jsonb_type');
+        });
+
+        $table = array_pop($tables);
+        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+
+        $this->writer->drop($table['dbName']);
+        $this->writer->create($table);
+        $this->writer->write($csvFile, $table);
+
+        $conn = $this->writer->getConnection();
+        $stmt = $conn->query("SELECT * FROM {$table['dbName']} ORDER BY id ASC");
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
+        $csv = new CsvFile($resFilename);
+        $csv->writeRow(["id","name","test"]);
+        foreach ($res as $row) {
+            if (!empty($row['test'])) {
+                $row['test'] = json_decode($row['test'], true);
+                ksort($row['test']);
+                $row['test'] = json_encode($row['test']);
+            }
+
+            $csv->writeRow($row);
+        }
+
+        $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
+
+        $conn->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
+        $stmt = $conn->query("SELECT * FROM {$table['dbName']} WHERE test ? 'name'");
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $this->assertCount(1, $res);
+        $this->assertTrue(1 === $res[0]['id']);
+    }
+
     public function testWriteIntegerArray()
     {
         $tables = array_filter($this->config['parameters']['tables'], function ($table) {

@@ -234,6 +234,76 @@
             "default": null
           }
         ]
+      },
+      {
+        "tableId": "json_type",
+        "dbName": "json_type",
+        "export": true,
+        "incremental": false,
+        "primaryKey": [
+          "id"
+        ],
+        "items": [
+          {
+            "name": "id",
+            "dbName": "id",
+            "type": "int",
+            "size": null,
+            "nullable": null,
+            "default": null
+          },
+          {
+            "name": "name",
+            "dbName": "name",
+            "type": "varchar",
+            "size": 255,
+            "nullable": null,
+            "default": null
+          },
+          {
+            "name": "test",
+            "dbName": "test",
+            "type": "json",
+            "size": null,
+            "nullable": true,
+            "default": null
+          }
+        ]
+      },
+      {
+        "tableId": "jsonb_type",
+        "dbName": "jsonb_type",
+        "export": true,
+        "incremental": false,
+        "primaryKey": [
+          "id"
+        ],
+        "items": [
+          {
+            "name": "id",
+            "dbName": "id",
+            "type": "int",
+            "size": null,
+            "nullable": null,
+            "default": null
+          },
+          {
+            "name": "name",
+            "dbName": "name",
+            "type": "varchar",
+            "size": 255,
+            "nullable": null,
+            "default": null
+          },
+          {
+            "name": "test",
+            "dbName": "test",
+            "type": "jsonb",
+            "size": null,
+            "nullable": true,
+            "default": null
+          }
+        ]
       }
     ]
   }

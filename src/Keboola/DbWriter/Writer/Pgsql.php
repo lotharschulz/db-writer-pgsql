@@ -411,7 +411,7 @@ class Pgsql extends Writer implements WriterInterface
     private function getStageColumnDataTypeSql(array $columnDefinition)
     {
         $type = strtolower($columnDefinition['type']);
-        if ($type === 'text' || strpos($type, '[]') !== false) {
+        if (in_array($type, ['text', 'json', 'jsonb']) || strpos($type, '[]') !== false) {
             return 'TEXT';
         } else {
             $isCharacterType = strstr(strtolower($columnDefinition['type']), 'char') !== false;
