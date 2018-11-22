@@ -1,7 +1,7 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
     "content-hash": "32e0c46ca882b8cf2efe7f69c46aebd8",
@@ -94,16 +94,16 @@
         },
         {
             "name": "keboola/ssh-tunnel",
-            "version": "1.0.2",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/keboola/ssh-tunnel.git",
-                "reference": "12bb3d0b2d0b35d2bff4752aaf99853a76261761"
+                "reference": "10f5cf523a47e1067a2f20dcac9090cf2f67a839"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keboola/ssh-tunnel/zipball/12bb3d0b2d0b35d2bff4752aaf99853a76261761",
-                "reference": "12bb3d0b2d0b35d2bff4752aaf99853a76261761",
+                "url": "https://api.github.com/repos/keboola/ssh-tunnel/zipball/10f5cf523a47e1067a2f20dcac9090cf2f67a839",
+                "reference": "10f5cf523a47e1067a2f20dcac9090cf2f67a839",
                 "shasum": ""
             },
             "require": {
@@ -124,12 +124,12 @@
             ],
             "authors": [
                 {
-                    "name": "Miroslav Cillik",
+                    "name": "Miroslav Čillík",
                     "email": "miro@keboola.com"
                 }
             ],
             "description": "Simple class for SSH tunneling",
-            "time": "2017-02-27T13:22:47+00:00"
+            "time": "2017-06-07T05:37:12+00:00"
         },
         {
             "name": "monolog/monolog",
