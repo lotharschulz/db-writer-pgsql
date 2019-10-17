@@ -4,7 +4,7 @@ services:
   - docker
 
 install:
-  - docker-compose build app
+  - docker-compose build
 
 script:
   - docker-compose run --rm app
