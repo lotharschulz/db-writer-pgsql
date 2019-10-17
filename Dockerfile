@@ -1,3 +1,4 @@
+FROM sshproxy-pgsql AS sshproxy
 FROM php:7.1-cli
 MAINTAINER Miroslav Cillik <miro@keboola.com>
 
@@ -28,5 +29,6 @@ RUN echo "memory_limit = -1" >> /usr/local/etc/php/php.ini
 RUN echo "date.timezone = \"Europe/Prague\"" >> /usr/local/etc/php/php.ini
 RUN composer selfupdate && composer install --no-interaction
 
+COPY --from=sshproxy /root/.ssh /root/.ssh
 CMD php ./run.php --data=/data
 

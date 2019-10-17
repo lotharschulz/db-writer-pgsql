@@ -18,6 +18,7 @@ services:
       PGSQL_DB_SCHEMA: public
     links:
       - pgsql
+    depends_on:
       - sshproxy
 
   pgsql:
@@ -26,6 +27,7 @@ services:
       POSTGRES_PASSWORD: some password
 
   sshproxy:
+    image: sshproxy-pgsql
     build: ./tests/docker/sshproxy
     volumes:
         - ./tests/docker/sshproxy:/code
@@ -53,4 +55,5 @@ services:
       PGSQL_DB_SCHEMA: public
     links:
       - pgsql
+    depends_on:
       - sshproxy
