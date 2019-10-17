@@ -18,6 +18,7 @@ services:
       PGSQL_DB_SCHEMA: public
     links:
       - pgsql
+      - sshproxy
     depends_on:
       - sshproxy
 
@@ -55,5 +56,6 @@ services:
       PGSQL_DB_SCHEMA: public
     links:
       - pgsql
+      - sshproxy
     depends_on:
       - sshproxy
