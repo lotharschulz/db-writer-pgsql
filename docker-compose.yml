@@ -1,12 +1,10 @@
 version: '2'
 services:
-  app:
+  app: &main
     build: .
     image: keboola/db-writer-pgsql
-    volumes:
-      - .:/code
     working_dir: /code
-    command: "./phpunit.sh"
+    command: composer ci
     tty: true
     stdin_open: true
     environment:
@@ -19,6 +17,12 @@ services:
     depends_on:
       - pgsql
       - sshproxy
+
+  dev:
+    <<: *main
+    image: keboola/db-writer-pgsql-dev
+    volumes:
+      - .:/code
 
   pgsql:
     image: postgres
