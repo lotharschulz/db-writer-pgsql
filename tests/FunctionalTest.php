@@ -43,8 +43,8 @@ class FunctionalTest extends BaseTest
             $config['parameters']['db']['ssh'] = [
                 'enabled' => true,
                 'keys' => [
-                    '#private' => $this->getEnv('pgsql', 'DB_SSH_KEY_PRIVATE'),
-                    'public' => $this->getEnv('pgsql', 'DB_SSH_KEY_PUBLIC')
+                    '#private' => $this->getPrivateKey(),
+                    'public' => $this->getPublicKey()
                 ],
                 'user' => 'root',
                 'sshHost' => 'sshproxy',
@@ -72,6 +72,15 @@ class FunctionalTest extends BaseTest
         $data = json_decode($process->getOutput(), true);
         $this->assertArrayHasKey('status', $data);
         $this->assertEquals('success', $data['status']);
+    }
+
+    public function getPrivateKey(): string
+    {
+        return file_get_contents('/root/.ssh/id_rsa');
+    }
+    public function getPublicKey(): string
+    {
+        return file_get_contents('/root/.ssh/id_rsa.pub');
     }
 
     private function initConfig(callable $callback = null)
