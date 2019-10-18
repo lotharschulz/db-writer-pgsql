@@ -1,26 +1,27 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: miroslavcillik
- * Date: 05/11/15
- * Time: 13:33
- */
 
-namespace Keboola\DbWriter\Writer;
+declare(strict_types=1);
+
+namespace Keboola\DbWriter\Tests\Writer;
 
 use Keboola\Csv\CsvFile;
 use Keboola\DbWriter\Test\BaseTest;
+use Keboola\DbWriter\Writer\Pgsql;
 
 class PgsqlTest extends BaseTest
 {
-    const DRIVER = 'pgsql';
+    public const DRIVER = 'pgsql';
 
-    /** @var Pgsql */
+    /** @var string */
+    protected $dataDir = __DIR__ . '/../../data';
+
+    /** @var Pgsql $writer */
     private $writer;
 
+    /** @var array $config */
     private $config;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->config = $this->initConfig();
         $this->writer = $this->getWriter($this->config['parameters']);
@@ -31,45 +32,45 @@ class PgsqlTest extends BaseTest
         }
 
         $this->writer->getConnection()->query(
-            "DROP TYPE IF EXISTS glasses_enum CASCADE"
+            'DROP TYPE IF EXISTS glasses_enum CASCADE'
         );
         $this->writer->getConnection()->query(
             "CREATE TYPE glasses_enum AS ENUM ('yes','no', 'sometimes');"
         );
     }
 
-    private function initConfig()
+    private function initConfig(): array
     {
         $configPath = $this->dataDir . '/config.json';
         $config = json_decode(file_get_contents($configPath), true);
 
         $config['parameters']['writer_class'] = ucfirst(self::DRIVER);
-        $config['parameters']['db']['user'] = $this->getEnv(self::DRIVER, 'DB_USER', true);
-        $config['parameters']['db']['#password'] = $this->getEnv(self::DRIVER, 'DB_PASSWORD', true);
-        $config['parameters']['db']['password'] = $this->getEnv(self::DRIVER, 'DB_PASSWORD', true);
-        $config['parameters']['db']['host'] = $this->getEnv(self::DRIVER, 'DB_HOST');
-        $config['parameters']['db']['port'] = $this->getEnv(self::DRIVER, 'DB_PORT');
-        $config['parameters']['db']['database'] = $this->getEnv(self::DRIVER, 'DB_DATABASE');
-        $config['parameters']['db']['schema'] = $this->getEnv(self::DRIVER, 'DB_SCHEMA');
+        $config['parameters']['db']['user'] = $this->getEnv(self::DRIVER . '_DB_USER', true);
+        $config['parameters']['db']['#password'] = $this->getEnv(self::DRIVER . '_DB_PASSWORD', true);
+        $config['parameters']['db']['password'] = $this->getEnv(self::DRIVER . '_DB_PASSWORD', true);
+        $config['parameters']['db']['host'] = $this->getEnv(self::DRIVER . '_DB_HOST');
+        $config['parameters']['db']['port'] = $this->getEnv(self::DRIVER . '_DB_PORT');
+        $config['parameters']['db']['database'] = $this->getEnv(self::DRIVER . '_DB_DATABASE');
+        $config['parameters']['db']['schema'] = $this->getEnv(self::DRIVER . '_DB_SCHEMA');
 
         return $config;
     }
 
-    private function getInputCsv($tableId)
+    private function getInputCsv(string $tableId): string
     {
-        return sprintf($this->dataDir . "/in/tables/%s.csv", $tableId);
+        return sprintf($this->dataDir . '/in/tables/%s.csv', $tableId);
     }
 
-    public function testDrop()
+    public function testDrop(): void
     {
         $conn = $this->writer->getConnection();
-        $conn->exec("DROP TABLE IF EXISTS dropMe");
-        $conn->exec("CREATE TABLE dropMe (
+        $conn->exec('DROP TABLE IF EXISTS dropMe');
+        $conn->exec('CREATE TABLE dropMe (
           id INT PRIMARY KEY,
           firstname VARCHAR(30) NOT NULL,
-          lastname VARCHAR(30) NOT NULL)");
+          lastname VARCHAR(30) NOT NULL)');
 
-        $this->writer->drop("dropMe");
+        $this->writer->drop('dropMe');
 
         $stmt = $conn->query("
             SELECT *
@@ -82,7 +83,7 @@ class PgsqlTest extends BaseTest
         $this->assertEmpty($res);
     }
 
-    public function testCreate()
+    public function testCreate(): void
     {
         $tables = $this->config['parameters']['tables'];
 
@@ -114,7 +115,7 @@ class PgsqlTest extends BaseTest
         }
     }
 
-    public function testWrite()
+    public function testWrite(): void
     {
         // simple table
         $table = $this->config['parameters']['tables'][0];
@@ -131,7 +132,7 @@ class PgsqlTest extends BaseTest
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
         $csv = new CsvFile($resFilename);
-        $csv->writeRow(["id","name","glasses"]);
+        $csv->writeRow(['id','name','glasses']);
         foreach ($res as $row) {
             $csv->writeRow($row);
         }
@@ -139,7 +140,7 @@ class PgsqlTest extends BaseTest
         $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
     }
 
-    public function testWriteNull()
+    public function testWriteNull(): void
     {
         $tables = array_filter($this->config['parameters']['tables'], function ($table) {
             return ($table['dbName'] === 'simple_null');
@@ -157,12 +158,12 @@ class PgsqlTest extends BaseTest
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
         $csv = new CsvFile($resFilename);
-        $csv->writeRow(["id","name","glasses","age"]);
+        $csv->writeRow(['id', 'name', 'glasses', 'age']);
         foreach ($res as $row) {
             if (isset($row['glasses']) && $row['glasses'] === null) {
                 $this->fail('Non nullable column cannot contains null value');
             }
-            if (isset($row['age']) && $row['age'] === "") {
+            if (isset($row['age']) && $row['age'] === '') {
                 $this->fail('Nullable column cannot contains empty string value');
             }
 
@@ -172,7 +173,7 @@ class PgsqlTest extends BaseTest
         $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
     }
 
-    public function testWriteEnum()
+    public function testWriteEnum(): void
     {
         $tables = array_filter(
             $this->config['parameters']['tables'],
@@ -193,7 +194,7 @@ class PgsqlTest extends BaseTest
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
         $csv = new CsvFile($resFilename);
-        $csv->writeRow(["id","name","glasses"]);
+        $csv->writeRow(['id', 'name', 'glasses']);
         foreach ($res as $row) {
             $csv->writeRow($row);
         }
@@ -201,7 +202,7 @@ class PgsqlTest extends BaseTest
         $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
     }
 
-    public function testUpsert()
+    public function testUpsert(): void
     {
         $conn = $this->writer->getConnection();
         $tables = $this->config['parameters']['tables'];
@@ -219,7 +220,7 @@ class PgsqlTest extends BaseTest
         $this->writer->write($csvFile, $targetTable);
 
         // second write (write to temp table, then merge with target table)
-        $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . "_increment"));
+        $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . '_increment'));
         $this->writer->create($table);
         $this->writer->write($csvFile2, $table);
         $this->writer->upsert($table, $targetTable['dbName']);
@@ -229,17 +230,17 @@ class PgsqlTest extends BaseTest
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
         $csv = new CsvFile($resFilename);
-        $csv->writeRow(["id", "name", "glasses"]);
+        $csv->writeRow(['id', 'name', 'glasses']);
         foreach ($res as $row) {
             $csv->writeRow($row);
         }
 
-        $expectedFilename = $this->getInputCsv($table['tableId'] . "_merged");
+        $expectedFilename = $this->getInputCsv($table['tableId'] . '_merged');
 
         $this->assertFileEquals($expectedFilename, $resFilename);
     }
 
-    public function testUpsertMultiPk()
+    public function testUpsertMultiPk(): void
     {
         // exist
         $conn = $this->writer->getConnection();
@@ -263,7 +264,7 @@ class PgsqlTest extends BaseTest
         $this->writer->write($csvFile, $targetTable);
 
         // second write (write to temp table, then merge with target table)
-        $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . "_increment"));
+        $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . '_increment'));
         $this->writer->create($table);
         $this->writer->write($csvFile2, $table);
 
@@ -277,17 +278,17 @@ class PgsqlTest extends BaseTest
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
         $csv = new CsvFile($resFilename);
-        $csv->writeRow(["id", "name", "glasses"]);
+        $csv->writeRow(['id', 'name', 'glasses']);
         foreach ($res as $row) {
             $csv->writeRow($row);
         }
 
-        $expectedFilename = $this->getInputCsv($table['tableId'] . "_merged");
+        $expectedFilename = $this->getInputCsv($table['tableId'] . '_merged');
         $this->assertFileEquals($expectedFilename, $resFilename);
     }
 
 
-    public function testUpsertMultiPkCaseSensitive()
+    public function testUpsertMultiPkCaseSensitive(): void
     {
         // exist
         $conn = $this->writer->getConnection();
@@ -300,7 +301,7 @@ class PgsqlTest extends BaseTest
         $table = $tables[0];
 
         $table['tableId'] = 'multi';
-        $table['primaryKey'] = ['Id', "Name"];
+        $table['primaryKey'] = ['Id', 'Name'];
 
         $table['dbName'] = ucfirst($table['dbName']);
 
@@ -308,7 +309,6 @@ class PgsqlTest extends BaseTest
             $item['dbName'] =  ucfirst($item['dbName']);
             return $item;
         }, $table['items']);
-
 
         $targetTable = $table;
         $table['dbName'] .= $table['incremental'] ? '_temp_' . uniqid() : '';
@@ -320,7 +320,7 @@ class PgsqlTest extends BaseTest
         $this->writer->write($csvFile, $targetTable);
 
         // second write (write to temp table, then merge with target table)
-        $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . "_increment"));
+        $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . '_increment'));
         $this->writer->create($table);
         $this->writer->write($csvFile2, $table);
 
@@ -339,11 +339,11 @@ class PgsqlTest extends BaseTest
             $csv->writeRow($row);
         }
 
-        $expectedFilename = $this->getInputCsv($table['tableId'] . "_merged_ucfirst");
+        $expectedFilename = $this->getInputCsv($table['tableId'] . '_merged_ucfirst');
         $this->assertFileEquals($expectedFilename, $resFilename);
     }
 
-    public function testWriteText()
+    public function testWriteText(): void
     {
         $tables = array_filter($this->config['parameters']['tables'], function ($table) {
             return ($table['dbName'] === 'simple_text');
@@ -361,7 +361,7 @@ class PgsqlTest extends BaseTest
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
         $csv = new CsvFile($resFilename);
-        $csv->writeRow(["id","name","description"]);
+        $csv->writeRow(['id','name','description']);
         foreach ($res as $row) {
             $csv->writeRow($row);
         }
@@ -369,7 +369,7 @@ class PgsqlTest extends BaseTest
         $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
     }
 
-    public function testWriteJson()
+    public function testWriteJson(): void
     {
         $tables = array_filter($this->config['parameters']['tables'], function ($table) {
             return ($table['dbName'] === 'json_type');
@@ -387,7 +387,7 @@ class PgsqlTest extends BaseTest
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
         $csv = new CsvFile($resFilename);
-        $csv->writeRow(["id","name","test"]);
+        $csv->writeRow(['id', 'name', 'test']);
         foreach ($res as $row) {
             $csv->writeRow($row);
         }
@@ -401,7 +401,7 @@ class PgsqlTest extends BaseTest
         $this->assertEquals('"Ondrej"', $res[0]['name']);
     }
 
-    public function testWriteJsonB()
+    public function testWriteJsonB(): void
     {
         $tables = array_filter($this->config['parameters']['tables'], function ($table) {
             return ($table['dbName'] === 'jsonb_type');
@@ -420,7 +420,7 @@ class PgsqlTest extends BaseTest
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
         $csv = new CsvFile($resFilename);
-        $csv->writeRow(["id","name","test"]);
+        $csv->writeRow(['id', 'name', 'test']);
         foreach ($res as $row) {
             if (!empty($row['test'])) {
                 $row['test'] = json_decode($row['test'], true);
@@ -438,10 +438,10 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $this->assertCount(1, $res);
-        $this->assertTrue(1 === $res[0]['id']);
+        $this->assertEquals(1, $res[0]['id']);
     }
 
-    public function testWriteIntegerArray()
+    public function testWriteIntegerArray(): void
     {
         $tables = array_filter($this->config['parameters']['tables'], function ($table) {
             return ($table['dbName'] === 'integer_array');
@@ -459,7 +459,7 @@ class PgsqlTest extends BaseTest
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
         $csv = new CsvFile($resFilename);
-        $csv->writeRow(["id","nodes"]);
+        $csv->writeRow(['id', 'nodes']);
         foreach ($res as $row) {
             $csv->writeRow($row);
         }

@@ -16,10 +16,8 @@ services:
       PGSQL_DB_PASSWORD: some password
       PGSQL_DB_DATABASE: postgres
       PGSQL_DB_SCHEMA: public
-    links:
-      - pgsql
-      - sshproxy
     depends_on:
+      - pgsql
       - sshproxy
 
   pgsql:
@@ -54,8 +52,6 @@ services:
       PGSQL_DB_PASSWORD: some password
       PGSQL_DB_DATABASE: postgres
       PGSQL_DB_SCHEMA: public
-    links:
-      - pgsql
-      - sshproxy
     depends_on:
+      - pgsql
       - sshproxy

@@ -1,33 +1,32 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: miroslavcillik
- * Date: 05/11/15
- * Time: 13:33
- */
 
-namespace Keboola\DbWriter\Writer;
+declare(strict_types=1);
+
+namespace Keboola\DbWriter\Tests\Writer;
 
 use Keboola\Csv\CsvFile;
 use Keboola\DbWriter\Logger;
 use Keboola\DbWriter\Test\BaseTest;
+use Keboola\DbWriter\Writer\Pgsql;
 use Keboola\DbWriter\WriterFactory;
+use Keboola\DbWriter\WriterInterface;
 use Monolog\Handler\TestHandler;
 
 class LogTest extends BaseTest
 {
-    /** @var Pgsql */
+    /** @var Pgsql $writer */
     private $writer;
 
+    /** @var array $config */
     private $config;
 
-    /** @var TestHandler */
+    /** @var TestHandler $logHandler */
     private $logHandler;
 
-    /** @var Logger */
+    /** @var Logger $logger */
     private $logger;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->logHandler = new TestHandler();
         $this->config = $this->initConfig();
@@ -39,7 +38,7 @@ class LogTest extends BaseTest
         }
 
         $this->writer->getConnection()->query(
-            "DROP TYPE IF EXISTS glasses_enum CASCADE"
+            'DROP TYPE IF EXISTS glasses_enum CASCADE'
         );
         $this->writer->getConnection()->query(
             "CREATE TYPE glasses_enum AS ENUM ('yes','no', 'sometimes');"
@@ -48,24 +47,24 @@ class LogTest extends BaseTest
         $this->logHandler->clear();
     }
 
-    private function initConfig()
+    private function initConfig(): array
     {
         $configPath = $this->dataDir . '/config.json';
         $config = json_decode(file_get_contents($configPath), true);
 
         $config['parameters']['writer_class'] = ucfirst(PgsqlTest::DRIVER);
-        $config['parameters']['db']['user'] = $this->getEnv(PgsqlTest::DRIVER, 'DB_USER', true);
-        $config['parameters']['db']['#password'] = $this->getEnv(PgsqlTest::DRIVER, 'DB_PASSWORD', true);
-        $config['parameters']['db']['password'] = $this->getEnv(PgsqlTest::DRIVER, 'DB_PASSWORD', true);
-        $config['parameters']['db']['host'] = $this->getEnv(PgsqlTest::DRIVER, 'DB_HOST');
-        $config['parameters']['db']['port'] = $this->getEnv(PgsqlTest::DRIVER, 'DB_PORT');
-        $config['parameters']['db']['database'] = $this->getEnv(PgsqlTest::DRIVER, 'DB_DATABASE');
-        $config['parameters']['db']['schema'] = $this->getEnv(PgsqlTest::DRIVER, 'DB_SCHEMA');
+        $config['parameters']['db']['user'] = $this->getEnv(PgsqlTest::DRIVER . '_DB_USER', true);
+        $config['parameters']['db']['#password'] = $this->getEnv(PgsqlTest::DRIVER . '_DB_PASSWORD', true);
+        $config['parameters']['db']['password'] = $this->getEnv(PgsqlTest::DRIVER . '_DB_PASSWORD', true);
+        $config['parameters']['db']['host'] = $this->getEnv(PgsqlTest::DRIVER . '_DB_HOST');
+        $config['parameters']['db']['port'] = $this->getEnv(PgsqlTest::DRIVER . '_DB_PORT');
+        $config['parameters']['db']['database'] = $this->getEnv(PgsqlTest::DRIVER . '_DB_DATABASE');
+        $config['parameters']['db']['schema'] = $this->getEnv(PgsqlTest::DRIVER . '_DB_SCHEMA');
 
         return $config;
     }
 
-    protected function getWriter($parameters)
+    protected function getWriter(array $parameters): WriterInterface
     {
         $writerFactory = new WriterFactory($parameters);
 
@@ -77,12 +76,12 @@ class LogTest extends BaseTest
         return $writerFactory->create($logger);
     }
 
-    private function getInputCsv($tableId)
+    private function getInputCsv(string $tableId): string
     {
-        return sprintf($this->dataDir . "/in/tables/%s.csv", $tableId);
+        return sprintf($this->dataDir . '/in/tables/%s.csv', $tableId);
     }
 
-    public function testDropLock()
+    public function testDropLock(): void
     {
         // simple table
         $table = $this->config['parameters']['tables'][0];
@@ -107,12 +106,12 @@ class LogTest extends BaseTest
         // test lock
         $this->writer->create($table);
 
-        $result = pg_send_query($connection, "
+        $result = pg_send_query($connection, '
             begin;
             lock simple in EXCLUSIVE mode;
             select pg_sleep(30);
             commit;
-        ");
+        ');
 
         $this->assertTrue($result, 'send batch query via pg_send_query failed');
 
@@ -122,10 +121,6 @@ class LogTest extends BaseTest
         foreach ($this->logHandler->getRecords() as $logHandler) {
             $this->assertArrayHasKey('message', $logHandler);
 
-            if (strpos($logHandler['message'], 'is locked by 1 transactions') === false) {
-                continue;
-            }
-
             if (strpos($logHandler['message'], $table['dbName']) !== false) {
                 $checkFound = true;
             }
@@ -134,7 +129,7 @@ class LogTest extends BaseTest
         $this->assertTrue($checkFound);
     }
 
-    public function testDropTable()
+    public function testDropTable(): void
     {
         // simple table
         $table = $this->config['parameters']['tables'][0];
@@ -157,7 +152,7 @@ class LogTest extends BaseTest
         $this->assertTrue($dropFound);
     }
 
-    public function testRemovePassword()
+    public function testRemovePassword(): void
     {
         // simple table
         $table = $this->config['parameters']['tables'][0];
@@ -175,15 +170,15 @@ class LogTest extends BaseTest
         foreach ($this->logHandler->getRecords() as $logHandler) {
             $this->assertArrayHasKey('message', $logHandler);
 
-            if (strpos($logHandler['message'],  'TARGET') !== false) {
+            if (strpos($logHandler['message'], 'TARGET') !== false) {
                 $logHasTarget = true;
             }
 
-            if (strpos($logHandler['message'],  $this->config['parameters']['db']['#password']) !== false) {
+            if (strpos($logHandler['message'], $this->config['parameters']['db']['#password']) !== false) {
                 $passwordFound = true;
             }
 
-            if (strpos($logHandler['message'],  '*SECRET*') !== false) {
+            if (strpos($logHandler['message'], '*SECRET*') !== false) {
                 $replaceFound = true;
             }
         }

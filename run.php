@@ -1,27 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 use Keboola\DbWriter\Application;
 use Keboola\DbWriter\Exception\ApplicationException;
 use Keboola\DbWriter\Exception\UserException;
-use Keboola\DbWriter\Logger;
 use Keboola\DbWriter\Pgsql\Configuration\ConfigDefinition;
 use Monolog\Handler\NullHandler;
+use Keboola\DbWriter\Logger;
+
+require_once(dirname(__FILE__) . '/vendor/autoload.php');
 
 define('APP_NAME', 'wr-db-pgsql');
 define('ROOT_PATH', __DIR__);
-
-require_once(dirname(__FILE__) . "/vendor/keboola/db-writer-common/bootstrap.php");
 
 $logger = new Logger(APP_NAME);
 
 $action = 'run';
 
 try {
-    $arguments = getopt("d::", ["data::"]);
-    if (!isset($arguments["data"])) {
+    $arguments = getopt('d::', ['data::']);
+    if (!isset($arguments['data'])) {
         throw new UserException('Data folder not set.');
     }
-    $config = json_decode(file_get_contents($arguments["data"] . "/config.json"), true);
+    $config = json_decode(file_get_contents($arguments['data'] . '/config.json'), true);
     $config['parameters']['data_dir'] = $arguments['data'];
     $config['parameters']['writer_class'] = 'Pgsql';
 
@@ -33,7 +35,7 @@ try {
         $app['logger']->setHandlers(array(new NullHandler(Logger::INFO)));
     }
 
-    echo json_encode($app->run());
+    echo $app->run();
 } catch (UserException $e) {
     $logger->log('error', $e->getMessage(), (array) $e->getData());
 
@@ -45,7 +47,7 @@ try {
 } catch (ApplicationException $e) {
     $logger->log('error', $e->getMessage(), (array) $e->getData());
     exit($e->getCode() > 1 ? $e->getCode(): 2);
-} catch (\Exception $e) {
+} catch (\Throwable $e) {
     $logger->log('error', $e->getMessage(), [
         'errFile' => $e->getFile(),
         'errLine' => $e->getLine(),

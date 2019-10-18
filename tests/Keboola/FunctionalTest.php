@@ -1,12 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: miroslavcillik
- * Date: 27/10/16
- * Time: 17:20
- */
 
-namespace Keboola\DbWriter\Writer\Pgsql\Tests;
+declare(strict_types=1);
+
+namespace Keboola\DbWriter\Tests;
 
 use Keboola\DbWriter\Test\BaseTest;
 use Symfony\Component\Filesystem\Filesystem;
@@ -14,13 +10,15 @@ use Symfony\Component\Process\Process;
 
 class FunctionalTest extends BaseTest
 {
-    const DRIVER = 'Pgsql';
+    private const DRIVER = 'Pgsql';
 
+    /** @var string $dataDir */
     protected $dataDir = ROOT_PATH . 'tests/data/functional';
 
+    /** @var string $tmpDataDir */
     protected $tmpDataDir = '/tmp/data';
 
-    public function setUp()
+    public function setUp(): void
     {
         // cleanup & init
         $this->prepareDataFiles();
@@ -31,20 +29,20 @@ class FunctionalTest extends BaseTest
         }
     }
 
-    public function testRun()
+    public function testRun(): void
     {
         $process = $this->runProcess();
         $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
     }
 
-    public function testRunThroughSSH()
+    public function testRunThroughSSH(): void
     {
         $this->initConfig(function ($config) {
             $config['parameters']['db']['ssh'] = [
                 'enabled' => true,
                 'keys' => [
                     '#private' => $this->getPrivateKey(),
-                    'public' => $this->getPublicKey()
+                    'public' => $this->getPublicKey(),
                 ],
                 'user' => 'root',
                 'sshHost' => 'sshproxy',
@@ -59,7 +57,7 @@ class FunctionalTest extends BaseTest
         $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
     }
 
-    public function testTestConnection()
+    public function testTestConnection(): void
     {
         $this->initConfig(function ($config) {
             $config['action'] = 'testConnection';
@@ -83,20 +81,19 @@ class FunctionalTest extends BaseTest
         return file_get_contents('/root/.ssh/id_rsa.pub');
     }
 
-    private function initConfig(callable $callback = null)
+    private function initConfig(?callable $callback = null): array
     {
         $configPath = $this->dataDir . '/config.json';
         $config = json_decode(file_get_contents($configPath), true);
 
         $config['parameters']['writer_class'] = self::DRIVER;
-        $config['parameters']['db']['user'] = $this->getEnv(self::DRIVER, 'DB_USER', true);
-        $config['parameters']['db']['#password'] = $this->getEnv(self::DRIVER, 'DB_PASSWORD', true);
-        $config['parameters']['db']['password'] = $this->getEnv(self::DRIVER, 'DB_PASSWORD', true);
-        $config['parameters']['db']['host'] = $this->getEnv(self::DRIVER, 'DB_HOST');
-        $config['parameters']['db']['port'] = $this->getEnv(self::DRIVER, 'DB_PORT');
-        $config['parameters']['db']['database'] = $this->getEnv(self::DRIVER, 'DB_DATABASE');
-        $config['parameters']['db']['schema'] = $this->getEnv(self::DRIVER, 'DB_SCHEMA');
-
+        $config['parameters']['db']['user'] = $this->getEnv(self::DRIVER . '_DB_USER', true);
+        $config['parameters']['db']['#password'] = $this->getEnv(self::DRIVER . '_DB_PASSWORD', true);
+        $config['parameters']['db']['password'] = $this->getEnv(self::DRIVER . '_DB_PASSWORD', true);
+        $config['parameters']['db']['host'] = $this->getEnv(self::DRIVER . '_DB_HOST');
+        $config['parameters']['db']['port'] = $this->getEnv(self::DRIVER . '_DB_PORT');
+        $config['parameters']['db']['database'] = $this->getEnv(self::DRIVER . '_DB_DATABASE');
+        $config['parameters']['db']['schema'] = $this->getEnv(self::DRIVER . '_DB_SCHEMA');
 
         if ($callback !== null) {
             $config = $callback($config);
@@ -109,7 +106,7 @@ class FunctionalTest extends BaseTest
         return $config;
     }
 
-    private function prepareDataFiles()
+    private function prepareDataFiles(): void
     {
         $fs = new Filesystem();
         $fs->remove($this->tmpDataDir);
@@ -129,9 +126,9 @@ class FunctionalTest extends BaseTest
         );
     }
 
-    private function runProcess()
+    protected function runProcess(): Process
     {
-        $process = new Process('php ' . ROOT_PATH . 'run.php --data=' . $this->tmpDataDir . ' 2>&1');
+        $process = new Process('php ' . ROOT_PATH . 'run.php --data=' . $this->tmpDataDir);
         $process->run();
 
         return $process;
