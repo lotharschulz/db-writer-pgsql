@@ -3,12 +3,9 @@ sudo: required
 services:
   - docker
 
-install:
-  - docker-compose build
-
 script:
+  - docker-compose build
   - docker-compose run --rm app
-  - docker-compose run --rm code-coverage
 
 after_success:
   - docker images

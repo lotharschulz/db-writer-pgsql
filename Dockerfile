@@ -1,6 +1,5 @@
 FROM sshproxy-pgsql AS sshproxy
 FROM php:7.1-cli
-MAINTAINER Miroslav Cillik <miro@keboola.com>
 
 # Deps
 RUN apt-get update

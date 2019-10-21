@@ -1,10 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: miroslavcillik
- * Date: 12/02/16
- * Time: 16:38
- */
+
+declare(strict_types=1);
 
 namespace Keboola\DbWriter\Writer;
 
@@ -14,11 +10,11 @@ use Keboola\DbWriter\Exception\UserException;
 use Keboola\DbWriter\Logger;
 use Keboola\DbWriter\Writer;
 use Keboola\DbWriter\WriterInterface;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
 class Pgsql extends Writer implements WriterInterface
 {
+    /** @var array $allowedTypes */
     private static $allowedTypes = [
         'int', 'smallint', 'integer', 'bigint',
         'decimal', 'numeric', 'real', 'double precision',
@@ -35,33 +31,25 @@ class Pgsql extends Writer implements WriterInterface
         'integer[]',
     ];
 
-    private $dbParams;
-
-    /** @var Logger */
-    protected $logger;
-
-    /** @var \PDO */
-    protected $db;
-
-    public function __construct($dbParams, Logger $logger)
+    public function __construct(array $dbParams, Logger $logger)
     {
         parent::__construct($dbParams, $logger);
         $this->logger = $logger;
     }
 
-    public function createConnection($dbParams)
+    public function createConnection(array $dbParams): \PDO
     {
         $this->dbParams = $dbParams;
 
         // convert errors to PDOExceptions
         $options = [
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
         ];
 
         // check params
         foreach (['host', 'database', 'user', 'password', 'schema'] as $r) {
             if (!isset($dbParams[$r])) {
-                throw new UserException(sprintf("Parameter %s is missing.", $r));
+                throw new UserException(sprintf('Parameter %s is missing.', $r));
             }
         }
 
@@ -71,7 +59,7 @@ class Pgsql extends Writer implements WriterInterface
         $this->logger->info(
             "Connecting to DSN '" . $dsn . "'...",
             [
-                'options' => $options
+                'options' => $options,
             ]
         );
 
@@ -81,21 +69,21 @@ class Pgsql extends Writer implements WriterInterface
         return $pdo;
     }
 
-    public function isTableValid(array $table)
+    public function isTableValid(array $table): bool
     {
         // TODO: Implement isTableValid() method.
 
         return true;
     }
 
-    public function drop($tableName)
+    public function drop(string $tableName): void
     {
         $this->reconnectIfDisconnected();
         $stmt = $this->db->prepare(
-            "select count(*) 
+            'select count(*) 
             from pg_locks l, pg_stat_all_tables t where l.relation=t.relid
             and relname = :tablename
-            group by relation;"
+            group by relation;'
         );
         $stmt->execute([$tableName]);
         $locks = $stmt->fetch()[0];
@@ -103,15 +91,15 @@ class Pgsql extends Writer implements WriterInterface
             $this->logger->info("Table \"$tableName\" is locked by $locks transactions, waiting for them to finish");
         }
 
-        $this->execQuery(sprintf("DROP TABLE IF EXISTS %s;", $this->escape($tableName)));
+        $this->execQuery(sprintf('DROP TABLE IF EXISTS %s;', $this->escape($tableName)));
     }
 
-    public function create(array $table)
+    public function create(array $table): void
     {
         $this->reconnectIfDisconnected();
 
         $sql = sprintf(
-            "CREATE TABLE %s (",
+            'CREATE TABLE %s (',
             $this->escape($table['dbName'])
         );
 
@@ -122,43 +110,43 @@ class Pgsql extends Writer implements WriterInterface
             $type = $this->getColumnDataTypeSql($col);
             $null = $col['nullable'] ? 'NULL' : 'NOT NULL';
             $default = empty($col['default']) ? '' : "DEFAULT '{$col['default']}'";
-            if ($type == 'TEXT') {
+            if ($type === 'TEXT') {
                 $default = '';
             }
             $sql .= "{$this->escape($col['dbName'])} $type $null $default";
             $sql .= ',';
         }
 
-		if (!empty($table['primaryKey'])) {
-			$writer = $this;
-			$sql .= PHP_EOL . sprintf(
-					"PRIMARY KEY (%s)",
-					implode(',', array_map(function($col) use ($writer) {
-						return $writer->escape($col);
-					}, $table['primaryKey']))
-				) . PHP_EOL;
+        if (!empty($table['primaryKey'])) {
+            $writer = $this;
+            $sql .= PHP_EOL . sprintf(
+                'PRIMARY KEY (%s)',
+                implode(',', array_map(function ($col) use ($writer) {
+                    return $writer->escape($col);
+                }, $table['primaryKey']))
+            ) . PHP_EOL;
 
-			$sql .= ',';
-		}
+            $sql .= ',';
+        }
 
         $sql = substr($sql, 0, -1);
 
-        $sql .= ");";
+        $sql .= ');';
 
         $this->execQuery($sql);
     }
 
-    private function createStage(array $table)
+    private function createStage(array $table): void
     {
         $sqlColumns = array_map(function ($col) {
             if (strtolower($col['type']) === 'text') {
                 return sprintf(
-                    "%s TEXT NULL",
+                    '%s TEXT NULL',
                     $this->escape($col['dbName'])
                 );
             } else {
                 return sprintf(
-                    "%s %s NULL",
+                    '%s %s NULL',
                     $this->escape($col['dbName']),
                     $this->getStageColumnDataTypeSql($col)
                 );
@@ -168,15 +156,15 @@ class Pgsql extends Writer implements WriterInterface
         }));
 
         $this->execQuery(sprintf(
-            "CREATE TABLE %s (%s)",
+            'CREATE TABLE %s (%s)',
             $this->escape($table['dbName']),
             implode(',', $sqlColumns)
         ));
     }
 
-    public function write(CsvFile $csvFile, array $table)
+    public function write(CsvFile $csvFile, array $table): void
     {
-        $this->logger->info("Using PSQL");
+        $this->logger->info('Using PSQL');
 
         // create staging table
         $stagingTable = $table;
@@ -217,11 +205,11 @@ class Pgsql extends Writer implements WriterInterface
                 $this->logger->info($process->getOutput());
                 $this->logger->info(sprintf("Data imported into staging table '%s'", $stagingTable['dbName']));
             } else {
-                throw new UserException("Write process failed: " . $process->getErrorOutput(), 400);
+                throw new UserException('Write process failed: ' . $process->getErrorOutput(), 400);
             }
 
             // move to destination table
-            $this->logger->info("Moving to destination table");
+            $this->logger->info('Moving to destination table');
             $columns = [];
             foreach ($table['items'] as $col) {
                 $type = $this->getColumnDataTypeSql($col);
@@ -242,7 +230,7 @@ class Pgsql extends Writer implements WriterInterface
             $this->execQuery($query);
 
             $this->logger->info(sprintf("Data moved into table '%s'", $table['dbName']));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->drop($stagingTable['dbName']);
             throw $e;
         }
@@ -251,7 +239,7 @@ class Pgsql extends Writer implements WriterInterface
         $this->drop($stagingTable['dbName']);
     }
 
-    public function upsert(array $table, $targetTable)
+    public function upsert(array $table, string $targetTable): void
     {
         $this->reconnectIfDisconnected();
 
@@ -263,7 +251,7 @@ class Pgsql extends Writer implements WriterInterface
                 return $this->escape($item['dbName']);
             },
             array_filter($table['items'], function ($item) {
-                return strtolower($item['type']) != 'ignore';
+                return strtolower($item['type']) !== 'ignore';
             })
         );
 
@@ -310,12 +298,12 @@ class Pgsql extends Writer implements WriterInterface
         $this->drop($table['dbName']);
     }
 
-    public static function getAllowedTypes()
+    public static function getAllowedTypes(): array
     {
         return self::$allowedTypes;
     }
 
-    public function tableExists($tableName)
+    public function tableExists(string $tableName): bool
     {
         $this->reconnectIfDisconnected();
 
@@ -328,21 +316,21 @@ class Pgsql extends Writer implements WriterInterface
         return !empty($res);
     }
 
-    private function execQuery($query)
+    private function execQuery(string $query): void
     {
         $this->reconnectIfDisconnected();
-		$logQuery = trim(preg_replace('/\s+/', ' ', $query));
+        $logQuery = trim(preg_replace('/\s+/', ' ', $query));
 
         $this->logger->info(sprintf("Executing query '%s'", $logQuery));
         $this->db->exec($query);
     }
 
-    public function showTables($dbName)
+    public function showTables(string $dbName): array
     {
-        throw new ApplicationException("Method not implemented");
+        throw new ApplicationException('Method "showTables" not implemented');
     }
 
-    public function tablePrimaryKey($tableName)
+    public function tablePrimaryKey(string $tableName): array
     {
         $query = "
             SELECT
@@ -358,42 +346,48 @@ class Pgsql extends Writer implements WriterInterface
         $stmt = $this->db->query(sprintf($query, $this->dbParams['schema'], $tableName));
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        return array_map(function($row) {
+        return array_map(function ($row) {
             return $row['column_name'];
         }, $res);
     }
 
-    public function getTableInfo($tableName)
+    public function getTableInfo(string $tableName): array
     {
-        throw new ApplicationException("Method not implemented");
+        throw new ApplicationException('Method "getTableInfo" not implemented');
     }
 
-    private function escape($str)
+
+    public function validateTable(array $tableConfig): void
+    {
+        $this->isTableValid($tableConfig);
+    }
+
+    private function escape(string $str): string
     {
         return '"' . $str . '"';
     }
 
-    public function testConnection()
+    public function testConnection(): void
     {
         $this->db->query('select current_date')->execute();
     }
 
-    public function generateTmpName($tableName)
+    public function generateTmpName(string $tableName): string
     {
         return $tableName . '_temp_' . uniqid();
     }
 
-    private function reconnectIfDisconnected()
+    private function reconnectIfDisconnected(): void
     {
         try {
             $this->db->query('select current_date')->execute();
         } catch (\PDOException $e) {
-            $this->logger->info("Reconnecting to DB");
+            $this->logger->info('Reconnecting to DB');
             $this->db = $this->createConnection($this->dbParams);
         }
     }
 
-    private function getColumnDataTypeSql(array $columnDefinition)
+    private function getColumnDataTypeSql(array $columnDefinition): string
     {
         $type = strtoupper($columnDefinition['type']);
 
@@ -408,7 +402,7 @@ class Pgsql extends Writer implements WriterInterface
         return $type;
     }
 
-    private function getStageColumnDataTypeSql(array $columnDefinition)
+    private function getStageColumnDataTypeSql(array $columnDefinition): string
     {
         $type = strtolower($columnDefinition['type']);
         if (in_array($type, ['text', 'json', 'jsonb']) || strpos($type, '[]') !== false) {
@@ -417,7 +411,7 @@ class Pgsql extends Writer implements WriterInterface
             $isCharacterType = strstr(strtolower($columnDefinition['type']), 'char') !== false;
 
             return sprintf(
-                "VARCHAR(%s)",
+                'VARCHAR(%s)',
                 ($isCharacterType && !empty($columnDefinition['size'])) ? $columnDefinition['size'] : '255'
             );
         }
