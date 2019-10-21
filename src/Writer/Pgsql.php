@@ -359,6 +359,7 @@ class Pgsql extends Writer implements WriterInterface
 
     public function validateTable(array $tableConfig): void
     {
+        $this->isTableValid($tableConfig);
     }
 
     private function escape(string $str): string
