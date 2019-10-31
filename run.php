@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-use Keboola\DbWriter\Application;
 use Keboola\DbWriter\Exception\ApplicationException;
 use Keboola\DbWriter\Exception\UserException;
-use Keboola\DbWriter\Pgsql\Configuration\ConfigDefinition;
 use Monolog\Handler\NullHandler;
 use Keboola\DbWriter\Logger;
+use Keboola\DbWriter\PgSQLApplication;
 
 require_once(dirname(__FILE__) . '/vendor/autoload.php');
 
@@ -29,7 +28,7 @@ try {
 
     $action = isset($config['action']) ? $config['action'] : $action;
 
-    $app = new Application($config, $logger, new ConfigDefinition());
+    $app = new PgSQLApplication($config, $logger);
 
     if ($action !== 'run') {
         $app['logger']->setHandlers(array(new NullHandler(Logger::INFO)));
