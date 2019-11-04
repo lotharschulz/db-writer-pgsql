@@ -38,6 +38,28 @@ abstract class BaseFunctionalTest extends BaseTest
         $this->assertEquals('success', $data['status']);
     }
 
+    public function testRunThroughSSH(): void
+    {
+        $this->initConfig(function ($config) {
+            $config['parameters']['db']['ssh'] = [
+                'enabled' => true,
+                'keys' => [
+                    '#private' => $this->getPrivateKey(),
+                    'public' => $this->getPublicKey(),
+                ],
+                'user' => 'root',
+                'sshHost' => 'sshproxy',
+                'remoteHost' => 'pgsql',
+                'remotePort' => '5432',
+                'localPort' => rand(33000, 33999),
+            ];
+            return $config;
+        });
+
+        $process = $this->runProcess();
+        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+    }
+
     protected function initConfig(?callable $callback = null): array
     {
         $configPath = $this->dataDir . '/config.json';

@@ -21,28 +21,6 @@ class FunctionalTest extends BaseFunctionalTest
         }
     }
 
-    public function testRunThroughSSH(): void
-    {
-        $this->initConfig(function ($config) {
-            $config['parameters']['db']['ssh'] = [
-                'enabled' => true,
-                'keys' => [
-                    '#private' => $this->getPrivateKey(),
-                    'public' => $this->getPublicKey(),
-                ],
-                'user' => 'root',
-                'sshHost' => 'sshproxy',
-                'remoteHost' => 'pgsql',
-                'remotePort' => '5432',
-                'localPort' => '33006',
-            ];
-            return $config;
-        });
-
-        $process = $this->runProcess();
-        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
-    }
-
     private function prepareDataFiles(): void
     {
         $fs = new Filesystem();
