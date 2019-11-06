@@ -8,17 +8,18 @@ use Keboola\DbWriter\Test\BaseTest;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 
-class FunctionalTest extends BaseFunctionalTest
+class FunctionalRowTest extends BaseFunctionalTest
 {
+    /** @var string $dataDir */
+    protected $dataDir = ROOT_PATH . 'tests/data/functionalRow';
+
     public function setUp(): void
     {
         // cleanup & init
         $this->prepareDataFiles();
         $config = $this->initConfig();
         $writer = $this->getWriter($config['parameters']);
-        foreach ($config['parameters']['tables'] as $table) {
-            $writer->drop($table['dbName']);
-        }
+        $writer->drop($config['parameters']['tableId']);
     }
 
     private function prepareDataFiles(): void
@@ -30,14 +31,6 @@ class FunctionalTest extends BaseFunctionalTest
         $fs->copy(
             $this->dataDir . '/in/tables/simple.csv',
             $this->tmpDataDir . '/in/tables/simple.csv'
-        );
-        $fs->copy(
-            $this->dataDir . '/in/tables/simple_increment.csv',
-            $this->tmpDataDir . '/in/tables/simple_increment.csv'
-        );
-        $fs->copy(
-            $this->dataDir . '/in/tables/special.csv',
-            $this->tmpDataDir . '/in/tables/special.csv'
         );
     }
 }
