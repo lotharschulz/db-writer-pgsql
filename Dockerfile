@@ -1,4 +1,4 @@
-FROM sshproxy-pgsql AS sshproxy
+FROM keboola/db-component-ssh-proxy:latest AS sshproxy
 FROM php:7.1-cli
 
 # Deps
