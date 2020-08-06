@@ -28,7 +28,7 @@ class Pgsql extends Writer implements WriterInterface
         'date', 'time', 'time with timezone', 'timestamp', 'timestamp with timezone', 'interval',
         'enum',
         'json', 'jsonb',
-        'integer[]',
+        // + array variants, see getAllowedTypes()
     ];
 
     public function __construct(array $dbParams, Logger $logger)
@@ -300,7 +300,12 @@ class Pgsql extends Writer implements WriterInterface
 
     public static function getAllowedTypes(): array
     {
-        return self::$allowedTypes;
+        $allowedTypes = self::$allowedTypes;
+        foreach (self::$allowedTypes as $type) {
+            // Each type can be used as array
+            $allowedTypes[] = $type . '[]';
+        }
+        return $allowedTypes;
     }
 
     public function tableExists(string $tableName): bool
@@ -392,10 +397,16 @@ class Pgsql extends Writer implements WriterInterface
         $type = strtoupper($columnDefinition['type']);
 
         if (!empty($columnDefinition['size'])) {
-            $type .= "({$columnDefinition['size']})";
-
             if (strtoupper($columnDefinition['type']) === 'ENUM') {
                 $type = $columnDefinition['size'];
+            } else if (strtoupper($columnDefinition['type']) === 'ENUM[]') {
+                $type = $columnDefinition['size'] . '[]';
+            } else if (preg_match('~\[\]$~', $type)) {
+                // For array type must be first size, then []
+                // Eg. DECIMAL[](20,10) is not valid, but DECIMAL(20,10)[] is valid
+                $type = preg_replace('~\[\]$~', "({$columnDefinition['size']})[]", $type);
+            } else {
+                $type .= "({$columnDefinition['size']})";
             }
         }
 
