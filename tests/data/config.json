@@ -226,10 +226,91 @@
             "default": null
           },
           {
-            "name": "description",
-            "dbName": "description",
+            "name": "nodes",
+            "dbName": "nodes",
             "type": "integer[]",
             "size": null,
+            "nullable": true,
+            "default": null
+          }
+        ]
+      },
+      {
+        "tableId": "varchar_array",
+        "dbName": "varchar_array",
+        "export": true,
+        "incremental": false,
+        "primaryKey": [
+          "id"
+        ],
+        "items": [
+          {
+            "name": "id",
+            "dbName": "id",
+            "type": "int",
+            "size": null,
+            "nullable": null,
+            "default": null
+          },
+          {
+            "name": "nodes",
+            "dbName": "nodes",
+            "type": "character varying[]",
+            "size": null,
+            "nullable": true,
+            "default": null
+          }
+        ]
+      },
+      {
+        "tableId": "decimal_array",
+        "dbName": "decimal_array",
+        "export": true,
+        "incremental": false,
+        "primaryKey": [
+          "id"
+        ],
+        "items": [
+          {
+            "name": "id",
+            "dbName": "id",
+            "type": "int",
+            "size": null,
+            "nullable": null,
+            "default": null
+          },
+          {
+            "name": "nodes",
+            "dbName": "nodes",
+            "type": "decimal[]",
+            "size": "20,10",
+            "nullable": true,
+            "default": null
+          }
+        ]
+      },
+      {
+        "tableId": "enum_array",
+        "dbName": "enum_array",
+        "export": true,
+        "incremental": false,
+        "primaryKey": [
+          "id"
+        ],
+        "items": [
+          {
+            "name": "id",
+            "dbName": "id",
+            "type": "int",
+            "size": null,
+            "nullable": null,
+            "default": null
+          },
+          {
+            "name": "nodes",
+            "dbName": "nodes",
+            "type": "enum[]",
+            "size": "glasses_enum",
             "nullable": true,
             "default": null
           }

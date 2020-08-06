@@ -466,4 +466,82 @@ class PgsqlTest extends BaseTest
 
         $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
     }
+
+    public function testWriteVarcharArray(): void
+    {
+        $tables = array_filter($this->config['parameters']['tables'], function ($table) {
+            return ($table['dbName'] === 'varchar_array');
+        });
+        $table = array_pop($tables);
+        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+
+        $this->writer->drop($table['dbName']);
+        $this->writer->create($table);
+        $this->writer->write($csvFile, $table);
+
+        $conn = $this->writer->getConnection();
+        $stmt = $conn->query("SELECT * FROM {$table['dbName']} ORDER BY id ASC");
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
+        $csv = new CsvFile($resFilename);
+        $csv->writeRow(['id', 'nodes']);
+        foreach ($res as $row) {
+            $csv->writeRow($row);
+        }
+
+        $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
+    }
+
+    public function testWriteDecimalArray(): void
+    {
+        $tables = array_filter($this->config['parameters']['tables'], function ($table) {
+            return ($table['dbName'] === 'decimal_array');
+        });
+        $table = array_pop($tables);
+        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+
+        $this->writer->drop($table['dbName']);
+        $this->writer->create($table);
+        $this->writer->write($csvFile, $table);
+
+        $conn = $this->writer->getConnection();
+        $stmt = $conn->query("SELECT * FROM {$table['dbName']} ORDER BY id ASC");
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
+        $csv = new CsvFile($resFilename);
+        $csv->writeRow(['id', 'nodes']);
+        foreach ($res as $row) {
+            $csv->writeRow($row);
+        }
+
+        $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
+    }
+
+    public function testWriteEnumArray(): void
+    {
+        $tables = array_filter($this->config['parameters']['tables'], function ($table) {
+            return ($table['dbName'] === 'enum_array');
+        });
+        $table = array_pop($tables);
+        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+
+        $this->writer->drop($table['dbName']);
+        $this->writer->create($table);
+        $this->writer->write($csvFile, $table);
+
+        $conn = $this->writer->getConnection();
+        $stmt = $conn->query("SELECT * FROM {$table['dbName']} ORDER BY id ASC");
+        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
+        $csv = new CsvFile($resFilename);
+        $csv->writeRow(['id', 'nodes']);
+        foreach ($res as $row) {
+            $csv->writeRow($row);
+        }
+
+        $this->assertFileEquals($this->getInputCsv($table['tableId']), $resFilename);
+    }
 }
