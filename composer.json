@@ -13,7 +13,7 @@
     "require": {
         "php": "^7.1",
         "symfony/config": "^4.3",
-        "keboola/db-writer-common": "^5.5"
+        "keboola/db-writer-common": "^5.7"
     },
     "require-dev": {
         "keboola/coding-standard": "^9.0",

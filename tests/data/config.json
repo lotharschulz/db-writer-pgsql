@@ -387,5 +387,55 @@
         ]
       }
     ]
+  },
+  "storage": {
+    "input": {
+      "tables": [
+        {
+          "source": "simple",
+          "destination": "simple.csv"
+        },
+        {
+          "source": "special",
+          "destination": "special.csv"
+        },
+        {
+          "source": "empty",
+          "destination": "empty.csv"
+        },
+        {
+          "source": "simple_null",
+          "destination": "simple_null.csv"
+        },
+        {
+          "source": "simple_text",
+          "destination": "simple_text.csv"
+        },
+        {
+          "source": "integer_array",
+          "destination": "integer_array.csv"
+        },
+        {
+          "source": "varchar_array",
+          "destination": "varchar_array.csv"
+        },
+        {
+          "source": "decimal_array",
+          "destination": "decimal_array.csv"
+        },
+        {
+          "source": "enum_array",
+          "destination": "enum_array.csv"
+        },
+        {
+          "source": "json_type",
+          "destination": "json_type.csv"
+        },
+        {
+          "source": "jsonb_type",
+          "destination": "jsonb_type.csv"
+        }
+      ]
+    }
   }
 }
