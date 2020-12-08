@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Keboola\DbWriter\Writer;
 
+use Throwable;
+use PDO;
+use PDOException;
 use Keboola\Csv\CsvFile;
 use Keboola\DbWriter\Exception\ApplicationException;
 use Keboola\DbWriter\Exception\UserException;
@@ -14,6 +17,8 @@ use Symfony\Component\Process\Process;
 
 class Pgsql extends Writer implements WriterInterface
 {
+    public const SERVER_VERSION_UNKNOWN = 'unknown';
+
     /** @var array $allowedTypes */
     private static $allowedTypes = [
         'int', 'smallint', 'integer', 'bigint',
@@ -31,19 +36,22 @@ class Pgsql extends Writer implements WriterInterface
         // + array variants, see getAllowedTypes()
     ];
 
+    /** @var string|null */
+    private $serverVersion = null;
+
     public function __construct(array $dbParams, Logger $logger)
     {
         parent::__construct($dbParams, $logger);
         $this->logger = $logger;
     }
 
-    public function createConnection(array $dbParams): \PDO
+    public function createConnection(array $dbParams): PDO
     {
         $this->dbParams = $dbParams;
 
         // convert errors to PDOExceptions
         $options = [
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ];
 
         // check params
@@ -63,8 +71,20 @@ class Pgsql extends Writer implements WriterInterface
             ]
         );
 
-        $pdo = new \PDO($dsn, $dbParams['user'], $dbParams['password'], $options);
+        // Set search path
+        $pdo = new PDO($dsn, $dbParams['user'], $dbParams['password'], $options);
         $pdo->exec("SET search_path TO \"{$dbParams["schema"]}\";");
+
+        // Get server version (only first time)
+        if (!$this->serverVersion) {
+            try {
+                $this->serverVersion = $this->getServerVersion($pdo);
+            } catch (Throwable $e) {
+                // ignore if we can't get the server version
+            }
+            $this->serverVersion = $this->serverVersion ?: self::SERVER_VERSION_UNKNOWN;
+            $this->logger->info(sprintf('PgSQL server version: %s', $this->serverVersion));
+        }
 
         return $pdo;
     }
@@ -98,8 +118,15 @@ class Pgsql extends Writer implements WriterInterface
     {
         $this->reconnectIfDisconnected();
 
+        // Table can already exists (incremental load), REATE TABLE IF NOT EXISTS is supported for PgSQL >= 9.1
+        // https://stackoverflow.com/a/7438222
+        $createTableStmt =
+            $this->serverVersion === self::SERVER_VERSION_UNKNOWN
+            || version_compare($this->serverVersion, '9.1', 'ge') ?
+                'CREATE TABLE IF NOT EXISTS' : 'CREATE TABLE';
         $sql = sprintf(
-            'CREATE TABLE %s (',
+            '%s %s (',
+            $createTableStmt,
             $this->escape($table['dbName'])
         );
 
@@ -349,7 +376,7 @@ class Pgsql extends Writer implements WriterInterface
         ";
 
         $stmt = $this->db->query(sprintf($query, $this->dbParams['schema'], $tableName));
-        $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $res = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return array_map(function ($row) {
             return $row['column_name'];
@@ -386,7 +413,7 @@ class Pgsql extends Writer implements WriterInterface
     {
         try {
             $this->db->query('select current_date')->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->logger->info('Reconnecting to DB');
             $this->db = $this->createConnection($this->dbParams);
         }
@@ -426,5 +453,12 @@ class Pgsql extends Writer implements WriterInterface
                 ($isCharacterType && !empty($columnDefinition['size'])) ? $columnDefinition['size'] : '255'
             );
         }
+    }
+
+    private function getServerVersion(PDO $pdo): ?string
+    {
+        $serverVersionRaw = $pdo->query('select version();')->fetch(PDO::FETCH_COLUMN);
+        preg_match('~^PostgreSQL (\d+.\d+)~', $serverVersionRaw, $m);
+        return $m[1] ?? null;
     }
 }
