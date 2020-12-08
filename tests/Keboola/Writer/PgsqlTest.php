@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Keboola\DbWriter\Tests\Writer;
 
 use Keboola\Csv\CsvFile;
+use Keboola\DbWriter\Logger;
 use Keboola\DbWriter\Test\BaseTest;
 use Keboola\DbWriter\Writer\Pgsql;
+use Keboola\DbWriter\WriterFactory;
+use Keboola\DbWriter\WriterInterface;
+use Monolog\Handler\TestHandler;
 
 class PgsqlTest extends BaseTest
 {
@@ -21,8 +25,13 @@ class PgsqlTest extends BaseTest
     /** @var array $config */
     private $config;
 
+    /** @var TestHandler $logHandler */
+    private $logHandler;
+
+
     public function setUp(): void
     {
+        $this->logHandler = new TestHandler();
         $this->config = $this->initConfig();
         $this->writer = $this->getWriter($this->config['parameters']);
 
@@ -37,6 +46,15 @@ class PgsqlTest extends BaseTest
         $this->writer->getConnection()->query(
             "CREATE TYPE glasses_enum AS ENUM ('yes','no', 'sometimes');"
         );
+    }
+
+    protected function getWriter(array $parameters): WriterInterface
+    {
+        $writerFactory = new WriterFactory($parameters);
+
+        $logger = new Logger(APP_NAME);
+        $logger->pushHandler($this->logHandler);
+        return $writerFactory->create($logger);
     }
 
     private function initConfig(): array
@@ -124,6 +142,12 @@ class PgsqlTest extends BaseTest
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
+        $this->assertTrue(
+            $this->logHandler->hasInfoThatContains('PgSQL server version: 13.')
+        );
+        $this->assertTrue(
+            $this->logHandler->hasInfoThatContains(sprintf('CREATE TABLE IF NOT EXISTS "%s"', $table['dbName']))
+        );
         $this->writer->write($csvFile, $table);
 
         $conn = $this->writer->getConnection();

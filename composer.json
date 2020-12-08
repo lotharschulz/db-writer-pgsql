@@ -12,6 +12,7 @@
     ],
     "require": {
         "php": "^7.1",
+        "ext-pdo": "*",
         "symfony/config": "^4.3",
         "keboola/db-writer-common": "^5.7"
     },
