@@ -1,6 +1,6 @@
 # Postgre SQL DB Writer
 
-[![Build Status](https://travis-ci.org/keboola/db-writer-pgsql.svg?branch=master)](https://travis-ci.org/keboola/db-writer-pgsql)
+[![Build Status](https://travis-ci.com/keboola/db-writer-pgsql.svg?branch=master)](https://travis-ci.com/keboola/db-writer-pgsql)
 [![Code Climate](https://codeclimate.com/github/keboola/db-writer-pgsql/badges/gpa.svg)](https://codeclimate.com/github/keboola/db-writer-pgsql)
 [![Test Coverage](https://codeclimate.com/github/keboola/db-writer-pgsql/badges/coverage.svg)](https://codeclimate.com/github/keboola/db-writer-pgsql/coverage)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/keboola/db-writer-pgsql/blob/master/LICENSE.md)
