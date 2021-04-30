@@ -21,7 +21,7 @@ class Pgsql extends Writer implements WriterInterface
 
     /** @var array $allowedTypes */
     private static $allowedTypes = [
-        'int', 'smallint', 'integer', 'bigint',
+        'int', 'smallint', 'integer', 'bigint', 'uuid',
         'decimal', 'numeric', 'real', 'double precision',
         'float4', 'float8',
         'serial', 'bigserial', 'smallserial',
