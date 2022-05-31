@@ -80,3 +80,7 @@ PGSQL_DB_PASSWORD=
 PGSQL_DB_DATABASE=
 ```
 4. Run docker-compose, which will trigger phpunit: `docker-compose run --rm app`
+
+## License
+
+MIT licensed, see [LICENSE](./LICENSE) file.
