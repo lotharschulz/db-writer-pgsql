@@ -1,5 +1,5 @@
 FROM keboola/db-component-ssh-proxy:latest AS sshproxy
-FROM php:7.1-cli
+FROM php:7.4-cli
 
 # Deps
 RUN apt-get update

@@ -20,18 +20,18 @@ abstract class BaseFunctionalTest extends BaseTest
     public function testRun(): void
     {
         $process = $this->runProcess();
-        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
     }
 
     public function testTestConnection(): void
     {
-        $config = $this->initConfig(function ($config) {
+        $this->initConfig(function ($config) {
             $config['action'] = 'testConnection';
             return $config;
         });
 
         $process = $this->runProcess();
-        $this->assertEquals(0, $process->getExitCode());
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
 
         $data = json_decode($process->getOutput(), true);
         $this->assertArrayHasKey('status', $data);
@@ -57,7 +57,7 @@ abstract class BaseFunctionalTest extends BaseTest
         });
 
         $process = $this->runProcess();
-        $this->assertEquals(0, $process->getExitCode(), $process->getOutput());
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
     }
 
     protected function initConfig(?callable $callback = null): array
@@ -87,7 +87,7 @@ abstract class BaseFunctionalTest extends BaseTest
 
     protected function runProcess(): Process
     {
-        $process = new Process('php ' . ROOT_PATH . 'run.php --data=' . $this->tmpDataDir);
+        $process = Process::fromShellCommandline('php ' . ROOT_PATH . 'run.php --data=' . $this->tmpDataDir);
         $process->run();
 
         return $process;

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Keboola\DbWriter\Tests\Writer;
 
-use Keboola\Csv\CsvFile;
-use Keboola\DbWriter\Logger;
+use Keboola\Component\Logger;
 use Keboola\DbWriter\Test\BaseTest;
 use Keboola\DbWriter\Writer\Pgsql;
 use Keboola\DbWriter\WriterFactory;
 use Keboola\DbWriter\WriterInterface;
 use Monolog\Handler\TestHandler;
+use SplFileInfo;
 
 class LogTest extends BaseTest
 {
@@ -68,7 +68,7 @@ class LogTest extends BaseTest
     {
         $writerFactory = new WriterFactory($parameters);
 
-        $logger = new Logger(APP_NAME);
+        $logger = new Logger();
         $logger->pushHandler($this->logHandler);
 
         $this->logger = $logger;
@@ -157,7 +157,7 @@ class LogTest extends BaseTest
         // simple table
         $table = $this->config['parameters']['tables'][0];
         $table['incremental'] = false;
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
