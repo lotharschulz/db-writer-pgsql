@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use Keboola\Component\Logger;
 use Keboola\DbWriter\Exception\ApplicationException;
 use Keboola\DbWriter\Exception\UserException;
 use Monolog\Handler\NullHandler;
-use Keboola\DbWriter\Logger;
 use Keboola\DbWriter\PgSQLApplication;
 
 require_once(dirname(__FILE__) . '/vendor/autoload.php');
@@ -13,7 +13,7 @@ require_once(dirname(__FILE__) . '/vendor/autoload.php');
 define('APP_NAME', 'wr-db-pgsql');
 define('ROOT_PATH', __DIR__);
 
-$logger = new Logger(APP_NAME);
+$logger = new Logger();
 
 $action = 'run';
 

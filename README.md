@@ -1,8 +1,5 @@
 # Postgre SQL DB Writer
 
-[![Build Status](https://travis-ci.com/keboola/db-writer-pgsql.svg?branch=master)](https://travis-ci.com/keboola/db-writer-pgsql)
-[![Code Climate](https://codeclimate.com/github/keboola/db-writer-pgsql/badges/gpa.svg)](https://codeclimate.com/github/keboola/db-writer-pgsql)
-[![Test Coverage](https://codeclimate.com/github/keboola/db-writer-pgsql/badges/coverage.svg)](https://codeclimate.com/github/keboola/db-writer-pgsql/coverage)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/keboola/db-writer-pgsql/blob/master/LICENSE.md)
 
 Writes data to pgsql Database.
@@ -70,13 +67,6 @@ App is developed on localhost using TDD.
 
 1. Clone from repository: `git clone git@github.com:keboola/db-writer-pgsql.git`
 2. Change directory: `cd db-writer-pgsql`
-3. Create `.env` file with variables:
-```
-STORAGE_API_TOKEN=
-PGSQL_DB_HOST=
-PGSQL_DB_PORT=5439
-PGSQL_DB_USER=
-PGSQL_DB_PASSWORD=
-PGSQL_DB_DATABASE=
-```
-4. Run docker-compose, which will trigger phpunit: `docker-compose run --rm app`
+3. Install composer dependencies: `docker-compose run --rm dev composer install`
+4. Develop
+5. Run tests: `docker-compose run --rm dev composer tests` or all checks: `docker-compose run --rm dev composer ci`

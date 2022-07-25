@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Keboola\DbWriter\Writer;
 
+use Psr\Log\LoggerInterface;
 use Throwable;
 use PDO;
 use PDOException;
-use Keboola\Csv\CsvFile;
 use Keboola\DbWriter\Exception\ApplicationException;
 use Keboola\DbWriter\Exception\UserException;
-use Keboola\DbWriter\Logger;
 use Keboola\DbWriter\Writer;
 use Keboola\DbWriter\WriterInterface;
 use Symfony\Component\Process\Process;
@@ -39,7 +38,7 @@ class Pgsql extends Writer implements WriterInterface
     /** @var string|null */
     private $serverVersion = null;
 
-    public function __construct(array $dbParams, Logger $logger)
+    public function __construct(array $dbParams, LoggerInterface $logger)
     {
         parent::__construct($dbParams, $logger);
         $this->logger = $logger;
@@ -189,7 +188,7 @@ class Pgsql extends Writer implements WriterInterface
         ));
     }
 
-    public function write(CsvFile $csvFile, array $table): void
+    public function write(\SplFileInfo $csvFile, array $table): void
     {
         $this->logger->info('Using PSQL');
 
@@ -223,7 +222,11 @@ class Pgsql extends Writer implements WriterInterface
         $this->logger->info(sprintf("Uploading data into staging table '%s'", $stagingTable['dbName']));
 
         try {
-            $process = new Process($psqlCommand, null, ['PGPASSWORD' => $this->dbParams['password']]);
+            $process = Process::fromShellCommandline(
+                $psqlCommand,
+                null,
+                ['PGPASSWORD' => $this->dbParams['password']]
+            );
             $process->setTimeout(null);
 
             $process->run();

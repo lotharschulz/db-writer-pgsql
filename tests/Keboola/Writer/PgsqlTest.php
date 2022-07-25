@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Keboola\DbWriter\Tests\Writer;
 
-use Keboola\Csv\CsvFile;
-use Keboola\DbWriter\Logger;
+use Keboola\Component\Logger;
+use Keboola\Csv\CsvWriter;
 use Keboola\DbWriter\Test\BaseTest;
 use Keboola\DbWriter\Writer\Pgsql;
 use Keboola\DbWriter\WriterFactory;
 use Keboola\DbWriter\WriterInterface;
 use Monolog\Handler\TestHandler;
+use SplFileInfo;
 
 class PgsqlTest extends BaseTest
 {
@@ -52,7 +53,7 @@ class PgsqlTest extends BaseTest
     {
         $writerFactory = new WriterFactory($parameters);
 
-        $logger = new Logger(APP_NAME);
+        $logger = new Logger();
         $logger->pushHandler($this->logHandler);
         return $writerFactory->create($logger);
     }
@@ -138,12 +139,12 @@ class PgsqlTest extends BaseTest
         // simple table
         $table = $this->config['parameters']['tables'][0];
         $table['incremental'] = false;
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
         $this->assertTrue(
-            $this->logHandler->hasInfoThatContains('PgSQL server version: 13.')
+            $this->logHandler->hasInfoThatContains('PgSQL server version: 14.')
         );
         $this->assertTrue(
             $this->logHandler->hasInfoThatContains(sprintf('CREATE TABLE IF NOT EXISTS "%s"', $table['dbName']))
@@ -155,7 +156,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id','name','glasses']);
         foreach ($res as $row) {
             $csv->writeRow($row);
@@ -170,7 +171,7 @@ class PgsqlTest extends BaseTest
             return ($table['dbName'] === 'simple_null');
         });
         $table = array_pop($tables);
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
@@ -181,7 +182,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id', 'name', 'glasses', 'age']);
         foreach ($res as $row) {
             if (isset($row['glasses']) && $row['glasses'] === null) {
@@ -207,7 +208,7 @@ class PgsqlTest extends BaseTest
         );
         $table = array_pop($tables);
 
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
         $this->writer->write($csvFile, $table);
@@ -217,7 +218,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id', 'name', 'glasses']);
         foreach ($res as $row) {
             $csv->writeRow($row);
@@ -238,13 +239,13 @@ class PgsqlTest extends BaseTest
         $table['dbName'] .= $table['incremental']?'_temp_' . uniqid():'';
 
         // first write
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
         $targetTable['incremental'] = false;
         $this->writer->create($targetTable);
         $this->writer->write($csvFile, $targetTable);
 
         // second write (write to temp table, then merge with target table)
-        $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . '_increment'));
+        $csvFile2 = new SplFileInfo($this->getInputCsv($table['tableId'] . '_increment'));
         $this->writer->create($table);
         $this->writer->write($csvFile2, $table);
         $this->writer->upsert($table, $targetTable['dbName']);
@@ -253,7 +254,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id', 'name', 'glasses']);
         foreach ($res as $row) {
             $csv->writeRow($row);
@@ -282,13 +283,13 @@ class PgsqlTest extends BaseTest
         $table['dbName'] .= $table['incremental']?'_temp_' . uniqid():'';
 
         // first write
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
         $targetTable['incremental'] = false;
         $this->writer->create($targetTable);
         $this->writer->write($csvFile, $targetTable);
 
         // second write (write to temp table, then merge with target table)
-        $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . '_increment'));
+        $csvFile2 = new SplFileInfo($this->getInputCsv($table['tableId'] . '_increment'));
         $this->writer->create($table);
         $this->writer->write($csvFile2, $table);
 
@@ -301,7 +302,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id', 'name', 'glasses']);
         foreach ($res as $row) {
             $csv->writeRow($row);
@@ -338,13 +339,13 @@ class PgsqlTest extends BaseTest
         $table['dbName'] .= $table['incremental'] ? '_temp_' . uniqid() : '';
 
         // first write
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
         $targetTable['incremental'] = false;
         $this->writer->create($targetTable);
         $this->writer->write($csvFile, $targetTable);
 
         // second write (write to temp table, then merge with target table)
-        $csvFile2 = new CsvFile($this->getInputCsv($table['tableId'] . '_increment'));
+        $csvFile2 = new SplFileInfo($this->getInputCsv($table['tableId'] . '_increment'));
         $this->writer->create($table);
         $this->writer->write($csvFile2, $table);
 
@@ -357,7 +358,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(array_keys(reset($res)));
         foreach ($res as $row) {
             $csv->writeRow($row);
@@ -373,7 +374,7 @@ class PgsqlTest extends BaseTest
             return ($table['dbName'] === 'simple_text');
         });
         $table = array_pop($tables);
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
@@ -384,7 +385,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id','name','description']);
         foreach ($res as $row) {
             $csv->writeRow($row);
@@ -399,7 +400,7 @@ class PgsqlTest extends BaseTest
             return ($table['dbName'] === 'json_type');
         });
         $table = array_pop($tables);
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
@@ -410,7 +411,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id', 'name', 'test']);
         foreach ($res as $row) {
             $csv->writeRow($row);
@@ -432,7 +433,7 @@ class PgsqlTest extends BaseTest
         });
 
         $table = array_pop($tables);
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
@@ -443,7 +444,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id', 'name', 'test']);
         foreach ($res as $row) {
             if (!empty($row['test'])) {
@@ -471,7 +472,7 @@ class PgsqlTest extends BaseTest
             return ($table['dbName'] === 'integer_array');
         });
         $table = array_pop($tables);
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
@@ -482,7 +483,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id', 'nodes']);
         foreach ($res as $row) {
             $csv->writeRow($row);
@@ -497,7 +498,7 @@ class PgsqlTest extends BaseTest
             return ($table['dbName'] === 'varchar_array');
         });
         $table = array_pop($tables);
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
@@ -508,7 +509,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id', 'nodes']);
         foreach ($res as $row) {
             $csv->writeRow($row);
@@ -523,7 +524,7 @@ class PgsqlTest extends BaseTest
             return ($table['dbName'] === 'decimal_array');
         });
         $table = array_pop($tables);
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
@@ -534,7 +535,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id', 'nodes']);
         foreach ($res as $row) {
             $csv->writeRow($row);
@@ -549,7 +550,7 @@ class PgsqlTest extends BaseTest
             return ($table['dbName'] === 'enum_array');
         });
         $table = array_pop($tables);
-        $csvFile = new CsvFile($this->getInputCsv($table['tableId']));
+        $csvFile = new SplFileInfo($this->getInputCsv($table['tableId']));
 
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
@@ -560,7 +561,7 @@ class PgsqlTest extends BaseTest
         $res = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resFilename = tempnam('/tmp', 'db-wr-test-tmp');
-        $csv = new CsvFile($resFilename);
+        $csv = new CsvWriter($resFilename);
         $csv->writeRow(['id', 'nodes']);
         foreach ($res as $row) {
             $csv->writeRow($row);

@@ -11,15 +11,18 @@
         }
     ],
     "require": {
-        "php": "^7.1",
+        "php": "^7.4",
         "ext-pdo": "*",
-        "symfony/config": "^4.3",
-        "keboola/db-writer-common": "^5.7"
+        "symfony/config": "^5.0",
+        "keboola/db-writer-common": "^5.9"
     },
     "require-dev": {
         "keboola/coding-standard": "^9.0",
+        "keboola/csv": "^3.1",
         "phpunit/phpunit": "^7.5",
-        "phpstan/phpstan-shim": "^0.11.16"
+        "phpstan/phpstan-shim": "^0.11.16",
+        "ext-json": "*",
+        "ext-pgsql": "*"
     },
     "autoload": {
         "psr-4": {
