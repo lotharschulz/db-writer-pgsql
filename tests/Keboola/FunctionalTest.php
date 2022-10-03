@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Keboola\DbWriter\Tests;
 
-use Keboola\DbWriter\Test\BaseTest;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Process\Process;
 
 class FunctionalTest extends BaseFunctionalTest
 {
