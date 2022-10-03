@@ -105,7 +105,7 @@ class Pgsql extends Writer implements WriterInterface
             group by relation;'
         );
         $stmt->execute([$tableName]);
-        $locks = $stmt->fetch()[0];
+        $locks = $stmt->fetch() ?: 0;
         if ($locks > 0) {
             $this->logger->info("Table \"$tableName\" is locked by $locks transactions, waiting for them to finish");
         }
