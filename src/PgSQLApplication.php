@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Keboola\DbWriter;
 
-use Keboola\DbWriter\Exception\ApplicationException;
+use Keboola\Csv\CsvReader;
 use Keboola\DbWriter\Pgsql\Configuration\PgSQLActionConfigRowDefinition;
 use Keboola\DbWriter\Pgsql\Configuration\PgSQLConfigDefinition;
 use Keboola\DbWriter\Pgsql\Configuration\PgSQLConfigRowDefinition;
@@ -31,9 +31,8 @@ class PgSQLApplication extends Application
 
     public function reorderColumns(SplFileInfo $csv, array $items): array
     {
-        $csvHeader = explode(';', fgets(fopen($csv->getPathname(), 'r')));
         $reordered = [];
-        foreach ($csvHeader as $csvCol) {
+        foreach ((new CsvReader($csv->getPathname()))->getHeader() as $csvCol) {
             foreach ($items as $item) {
                 if ($csvCol === $item['name']) {
                     $reordered[] = $item;
