@@ -144,7 +144,7 @@ class PgsqlTest extends BaseTest
         $this->writer->drop($table['dbName']);
         $this->writer->create($table);
         $this->assertTrue(
-            $this->logHandler->hasInfoThatContains('PgSQL server version: 14.')
+            $this->logHandler->hasInfoThatContains('PgSQL server version: 15.1')
         );
         $this->assertTrue(
             $this->logHandler->hasInfoThatContains(sprintf('CREATE TABLE IF NOT EXISTS "%s"', $table['dbName']))
