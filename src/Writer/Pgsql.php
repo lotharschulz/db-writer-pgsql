@@ -105,7 +105,8 @@ class Pgsql extends Writer implements WriterInterface
             group by relation;'
         );
         $stmt->execute([$tableName]);
-        $locks = $stmt->fetch() ? $stmt->fetch()[0] : 0;
+        $fetch = $stmt->fetch();
+        $locks = $fetch ? $fetch[0] : 0;
         if ($locks > 0) {
             $this->logger->info("Table \"$tableName\" is locked by $locks transactions, waiting for them to finish");
         }
@@ -117,7 +118,7 @@ class Pgsql extends Writer implements WriterInterface
     {
         $this->reconnectIfDisconnected();
 
-        // Table can already exists (incremental load), REATE TABLE IF NOT EXISTS is supported for PgSQL >= 9.1
+        // Table can already exist (incremental load), CREATE TABLE IF NOT EXISTS is supported for PgSQL >= 9.1
         // https://stackoverflow.com/a/7438222
         $createTableStmt =
             $this->serverVersion === self::SERVER_VERSION_UNKNOWN

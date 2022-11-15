@@ -36,7 +36,7 @@ try {
 
     echo $app->run();
 } catch (UserException $e) {
-    $logger->log('error', $e->getMessage(), (array) $e->getData());
+    $logger->log('error', $e->getMessage());
 
     if ($action !== 'run') {
         echo $e->getMessage();
