@@ -8,8 +8,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class FunctionalRowTest extends BaseFunctionalTest
 {
-    /** @var string $dataDir */
-    protected $dataDir = ROOT_PATH . 'tests/data/functionalRow';
+    protected string $dataDir = ROOT_PATH . 'tests/data/functionalRow';
 
     public function setUp(): void
     {

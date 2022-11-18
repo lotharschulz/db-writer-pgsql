@@ -17,8 +17,7 @@ class PgsqlTest extends BaseTest
 {
     public const DRIVER = 'pgsql';
 
-    /** @var string */
-    protected $dataDir = __DIR__ . '/../../data';
+    protected string $dataDir = __DIR__ . '/../../data';
 
     /** @var Pgsql $writer */
     private $writer;
