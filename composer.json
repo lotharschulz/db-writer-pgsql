@@ -14,7 +14,7 @@
         "php": "^7.4",
         "ext-pdo": "*",
         "symfony/config": "^5.0",
-        "keboola/db-writer-common": "^5.9"
+        "keboola/db-writer-common": "^5.10"
     },
     "require-dev": {
         "keboola/coding-standard": "^9.0",

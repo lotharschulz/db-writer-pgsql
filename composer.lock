@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1065a41337eeb2ac80c26602e3a183b7",
+    "content-hash": "de67a23092a32cf0a18c51c9720a3fcf",
     "packages": [
         {
             "name": "keboola/common-exceptions",
@@ -48,16 +48,16 @@
         },
         {
             "name": "keboola/db-writer-common",
-            "version": "5.9.0",
+            "version": "5.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/keboola/db-writer-common.git",
-                "reference": "cd04a2e51c61cae2cd888fa902d1e41228fa2fb6"
+                "reference": "a1282fe96530e1c2b674d2a770efb60b0a3de668"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keboola/db-writer-common/zipball/cd04a2e51c61cae2cd888fa902d1e41228fa2fb6",
-                "reference": "cd04a2e51c61cae2cd888fa902d1e41228fa2fb6",
+                "url": "https://api.github.com/repos/keboola/db-writer-common/zipball/a1282fe96530e1c2b674d2a770efb60b0a3de668",
+                "reference": "a1282fe96530e1c2b674d2a770efb60b0a3de668",
                 "shasum": ""
             },
             "require": {
@@ -65,9 +65,10 @@
                 "ext-mbstring": "*",
                 "ext-pdo": "*",
                 "keboola/php-component": "^8.2",
+                "keboola/retry": "^0.5.1",
                 "keboola/ssh-tunnel": "^2.0",
                 "monolog/monolog": "^2.0",
-                "php": "^7.1",
+                "php": "^7.4",
                 "pimple/pimple": "^3.0",
                 "symfony/config": "^5.0",
                 "symfony/filesystem": "^5.0",
@@ -106,9 +107,9 @@
             ],
             "support": {
                 "issues": "https://github.com/keboola/db-writer-common/issues",
-                "source": "https://github.com/keboola/db-writer-common/tree/5.9.0"
+                "source": "https://github.com/keboola/db-writer-common/tree/5.10.0"
             },
-            "time": "2021-02-23T13:17:36+00:00"
+            "time": "2022-11-18T11:22:08+00:00"
         },
         {
             "name": "keboola/php-component",
@@ -169,6 +170,61 @@
                 "source": "https://github.com/keboola/php-component/tree/8.3.0"
             },
             "time": "2021-03-12T08:12:05+00:00"
+        },
+        {
+            "name": "keboola/retry",
+            "version": "0.5.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/keboola/retry.git",
+                "reference": "e2ce6f343db1167350df2850a4532ad6845a635d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/keboola/retry/zipball/e2ce6f343db1167350df2850a4532ad6845a635d",
+                "reference": "e2ce6f343db1167350df2850a4532ad6845a635d",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1",
+                "psr/log": "^1.1|^2|^3"
+            },
+            "replace": {
+                "vkartaviy/retry": "*"
+            },
+            "require-dev": {
+                "keboola/coding-standard": "^7.0",
+                "phpstan/phpstan-shim": "^0.10",
+                "phpunit/phpunit": "7.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Retry\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Keboola Dev",
+                    "email": "devel@keboola.com"
+                }
+            ],
+            "description": "Library for repeatable and retryable operations",
+            "keywords": [
+                "backoff",
+                "proxy",
+                "repeat",
+                "retry"
+            ],
+            "support": {
+                "issues": "https://github.com/keboola/retry/issues",
+                "source": "https://github.com/keboola/retry/tree/0.5.1"
+            },
+            "time": "2022-09-13T10:26:25+00:00"
         },
         {
             "name": "keboola/ssh-tunnel",
