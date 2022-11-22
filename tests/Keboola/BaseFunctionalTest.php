@@ -11,11 +11,9 @@ abstract class BaseFunctionalTest extends BaseTest
 {
     protected const DRIVER = 'Pgsql';
 
-    /** @var string $tmpDataDir */
-    protected $tmpDataDir = '/tmp/data';
+    protected string $tmpDataDir = '/tmp/data';
 
-    /** @var string $dataDir */
-    protected $dataDir = ROOT_PATH . 'tests/data/functional';
+    protected string $dataDir = ROOT_PATH . 'tests/data/functional';
 
     public function testRun(): void
     {
