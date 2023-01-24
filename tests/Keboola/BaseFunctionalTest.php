@@ -58,6 +58,25 @@ abstract class BaseFunctionalTest extends BaseTest
         $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
     }
 
+    public function testLongTableName(): void
+    {
+        $this->initConfig(function ($config) {
+            if ($this->dataDir === ROOT_PATH . 'tests/data/functionalRow') {
+                $config['parameters']['dbName'] = 'reallyLongTableName' . str_repeat('x', 60);
+            } else {
+                $config['parameters']['tables'][0]['dbName'] = 'reallyLongTableName' . str_repeat('x', 60);
+            }
+            return $config;
+        });
+
+        $process = $this->runProcess();
+        $this->assertEquals(1, $process->getExitCode());
+        $this->assertStringContainsString(
+            'PostgreSQL has limit of table name length for 63 characters',
+            $process->getErrorOutput()
+        );
+    }
+
     protected function initConfig(?callable $callback = null): array
     {
         $configPath = $this->dataDir . '/config.json';
