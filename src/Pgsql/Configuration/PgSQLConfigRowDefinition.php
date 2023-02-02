@@ -50,6 +50,12 @@ class PgSQLConfigRowDefinition implements ConfigurationInterface
                 ->scalarNode('dbName')
                     ->isRequired()
                     ->cannotBeEmpty()
+                    ->validate()
+                        ->ifTrue(function ($v) {
+                            return strlen($v) > 63;
+                        })
+                        ->thenInvalid('PostgreSQL has limit of table name length for 63 characters')
+                    ->end()
                 ->end()
                 ->booleanNode('incremental')
                     ->defaultValue(false)
