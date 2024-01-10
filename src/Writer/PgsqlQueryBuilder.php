@@ -168,6 +168,7 @@ SQL;
         string $tableName,
         ExportConfig $exportConfig,
     ): string {
+        $items = array_filter($exportConfig->getItems(), fn($item) => strtolower($item->getType()) !== 'ignore');
         $columns = array_map(function (ItemConfig $item) use ($connection) {
             $type = $this->getColumnDataTypeSql($item);
             $colName = $connection->quoteIdentifier($item->getDbName());
@@ -176,7 +177,7 @@ SQL;
                 $srcColName = sprintf("NULLIF(%s, '')", $colName);
             }
             return sprintf('CAST(%s AS %s) as %s', $srcColName, $type, $colName);
-        }, $exportConfig->getItems());
+        }, $items);
 
         return sprintf(
             'INSERT INTO %s SELECT %s FROM %s',

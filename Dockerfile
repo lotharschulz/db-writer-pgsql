@@ -14,7 +14,7 @@ COPY docker/composer-install.sh /tmp/composer-install.sh
 RUN apt-get update && apt-get install -y --no-install-recommends \
         wget curl make git bzip2 time libzip-dev openssl \
         patch unzip libsqlite3-dev gawk freetds-dev subversion \
-        libpq-dev locales postgresql postgresql-contrib \
+        libpq-dev locales postgresql postgresql-contrib ssh \
 	&& rm -r /var/lib/apt/lists/* \
 	&& sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen \
 	&& locale-gen \
