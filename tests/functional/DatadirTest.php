@@ -98,9 +98,10 @@ class DatadirTest extends AbstractDatadirTestCase
 
     private function getTableNames(): array
     {
+        $sql = 'SELECT table_name FROM information_schema.tables WHERE table_catalog=\'%s\' AND table_schema = \'%s\';';
         $tables = $this->connection->fetchAll(
             sprintf(
-                'SELECT table_name FROM information_schema.tables WHERE table_catalog=\'%s\' AND table_schema = \'%s\';',
+                $sql,
                 getenv('DB_DATABASE'),
                 getenv('DB_SCHEMA'),
             ),

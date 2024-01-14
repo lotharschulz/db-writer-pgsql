@@ -1,0 +1,10 @@
+Connecting to DSN "pgsql:host=pgsql;port=5432;dbname=postgres"...
+Creating PDO connection to "pgsql:host=pgsql;port=5432;dbname=postgres".
+PgSQL server version: 16.1
+Temporary Table "%s" created
+Uploading data into staging table '%s'
+COPY %s
+Data imported into staging table '%s'
+Moving to destination table
+Data moved into table 'incremental'
+Data upserted to table "incremental".
