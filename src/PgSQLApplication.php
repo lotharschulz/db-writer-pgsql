@@ -6,5 +6,5 @@ namespace Keboola\DbWriter;
 
 class PgSQLApplication extends Application
 {
-    protected string $writerName = 'PgSQL';
+    protected string $writerName = 'Pgsql';
 }
