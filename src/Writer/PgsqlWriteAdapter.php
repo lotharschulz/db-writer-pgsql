@@ -67,13 +67,14 @@ class PgsqlWriteAdapter extends PdoWriteAdapter
                 ]);
             } else {
                 $type = strtolower($item->getType());
+                $stageType = $this->getStageColumnDataTypeSql($item);
                 $size = (str_contains($type, 'char') && $item->hasSize()) ? $item->getSize() : '255';
                 $stageItems[] = ItemConfig::fromArray([
                     'name' => $item->getName(),
                     'dbName' => $item->getDbName(),
-                    'type' => $this->getStageColumnDataTypeSql($item),
+                    'type' => $stageType,
                     'nullable' => true,
-                    'size' => $size,
+                    'size' => $stageType === 'varchar' ? $size : null,
                 ]);
             }
         }
