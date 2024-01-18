@@ -80,13 +80,13 @@ SQL;
         self::assertStringMatchesFormat('Running query "CREATE  TABLE IF NOT EXISTS "%s" ("id" VARCHAR NULL ,"name" VARCHAR NULL ,"age" VARCHAR NULL );".', $logger->records[10]['message']);
 
         // write data to stage table
-        self::assertStringMatchesFormat('Uploading data into staging table \'%s\'', $logger->records[11]['message']);
-        self::assertStringMatchesFormat('Data imported into staging table \'%s\'', $logger->records[13]['message']);
+        self::assertStringMatchesFormat('Uploading data into staging table "%s".', $logger->records[11]['message']);
+        self::assertStringMatchesFormat('Data imported into staging table "%s".', $logger->records[13]['message']);
 
         // move data from stage to destination table
         self::assertStringMatchesFormat('Moving to destination table', $logger->records[14]['message']);
         self::assertStringMatchesFormat('Running query "INSERT INTO "test" SELECT CAST("id" AS INTEGER) as "id",CAST("name" AS CHARACTER VARYING(255)) as "name",CAST("age" AS INTEGER) as "age" FROM "%s"".', $logger->records[15]['message']);
-        self::assertStringMatchesFormat('Data moved into table \'test\'', $logger->records[16]['message']);
+        self::assertStringMatchesFormat('Data moved into table "test".', $logger->records[16]['message']);
 
         // drop stage table
         self::assertStringMatchesFormat('Dropping staging table "%s"', $logger->records[17]['message']);

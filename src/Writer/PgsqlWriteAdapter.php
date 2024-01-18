@@ -130,7 +130,7 @@ class PgsqlWriteAdapter extends PdoWriteAdapter
             $copyQuery,
         );
 
-        $this->logger->info(sprintf("Uploading data into staging table '%s'", $stageTableName));
+        $this->logger->info(sprintf('Uploading data into staging table "%s".', $stageTableName));
 
         $process = Process::fromShellCommandline(
             $psqlCommand,
@@ -143,7 +143,7 @@ class PgsqlWriteAdapter extends PdoWriteAdapter
 
         if ($process->isSuccessful()) {
             $this->logger->info($process->getOutput());
-            $this->logger->info(sprintf("Data imported into staging table '%s'", $stageTableName));
+            $this->logger->info(sprintf('Data imported into staging table "%s".', $stageTableName));
         } else {
             throw new UserException('Write process failed: ' . $process->getErrorOutput(), 400);
         }
@@ -164,6 +164,6 @@ class PgsqlWriteAdapter extends PdoWriteAdapter
         );
         $this->connection->exec($query);
 
-        $this->logger->info(sprintf("Data moved into table '%s'", $exportConfig->getDbName()));
+        $this->logger->info(sprintf('Data moved into table "%s".', $exportConfig->getDbName()));
     }
 }

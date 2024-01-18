@@ -2,8 +2,8 @@ Connecting to DSN "pgsql:host=pgsql;port=5432;dbname=postgres"...
 Creating PDO connection to "pgsql:host=pgsql;port=5432;dbname=postgres".
 PgSQL server version: 16.1
 Table "special" created
-Uploading data into staging table '%s'
+Uploading data into staging table "%s".
 COPY %s
-Data imported into staging table '%s'
+Data imported into staging table "%s".
 Moving to destination table
-Data moved into table 'special'
+Data moved into table "special".
