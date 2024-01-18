@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Keboola\DbWriter\Writer;
 
 use Keboola\DbWriter\Exception\UserException;
+use Keboola\DbWriterAdapter\PDO\PdoConnection;
 use Keboola\DbWriterAdapter\PDO\PdoWriteAdapter;
+use Keboola\DbWriterAdapter\Query\QueryBuilder;
 use Keboola\DbWriterConfig\Configuration\ValueObject\ExportConfig;
 use Keboola\DbWriterConfig\Configuration\ValueObject\ItemConfig;
 use Keboola\DbWriterConfig\Exception\PropertyNotSetException;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Process\Process;
 
 /**
@@ -40,13 +43,17 @@ class PgsqlWriteAdapter extends PdoWriteAdapter
     {
         $stageTableName = $this->generateTmpName($tableName);
 
+        $this->logger->debug(sprintf('Creating staging table "%s"', $stageTableName));
         $this->createStage($stageTableName, $exportConfig->getItems());
+        $this->logger->debug(sprintf('Staging table "%s" created', $stageTableName));
 
         try {
             $this->writeDataToStage($stageTableName, $exportConfig);
             $this->moveDataFromStageToTable($stageTableName, $tableName, $exportConfig);
         } finally {
+            $this->logger->debug(sprintf('Dropping staging table "%s"', $stageTableName));
             $this->drop($stageTableName);
+            $this->logger->debug(sprintf('Staging table "%s" dropped', $stageTableName));
         }
     }
 
