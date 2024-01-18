@@ -38,6 +38,7 @@
     },
     "scripts": {
         "tests": [
+            "@tests-phpunit",
             "@tests-datadir"
         ],
         "tests-phpunit": "phpunit --testsuite unit",

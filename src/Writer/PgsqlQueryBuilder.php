@@ -145,7 +145,7 @@ SQL;
         );
     }
 
-    public function getCopyQueryStatement(
+    public function copyQueryStatement(
         Connection $connection,
         ExportConfig $exportConfig,
         string $stageTableName,

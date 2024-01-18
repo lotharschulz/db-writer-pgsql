@@ -108,7 +108,7 @@ class PgsqlWriteAdapter extends PdoWriteAdapter
         $this->drop($stageTableName);
         $this->createStage($stageTableName, $exportConfig->getItems());
 
-        $copyQuery = $this->queryBuilder->getCopyQueryStatement(
+        $copyQuery = $this->queryBuilder->copyQueryStatement(
             $this->connection,
             $exportConfig,
             $stageTableName,
