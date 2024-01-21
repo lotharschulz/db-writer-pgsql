@@ -39,10 +39,12 @@
     "scripts": {
         "tests": [
             "@tests-phpunit",
-            "@tests-datadir"
+            "@tests-datadir",
+            "@tests-perf"
         ],
         "tests-phpunit": "phpunit --testsuite unit",
         "tests-datadir": "phpunit --testsuite functional",
+        "tests-perf": "phpunit --testsuite perf",
         "phpcs": "phpcs -n --ignore=vendor --extensions=php .",
         "phpcbf": "phpcbf -n --ignore=vendor --extensions=php .",
         "phpstan": "phpstan analyse --no-progress --level=max ./src ./tests -c phpstan.neon",
