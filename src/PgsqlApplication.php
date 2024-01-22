@@ -11,7 +11,7 @@ use Keboola\DbWriterConfig\Configuration\ConfigDefinition;
 use Keboola\DbWriterConfig\Configuration\ConfigRowDefinition;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
-class PgSQLApplication extends Application
+class PgsqlApplication extends Application
 {
     protected string $writerName = 'Pgsql';
 

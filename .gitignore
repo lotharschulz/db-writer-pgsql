@@ -1,10 +1,4 @@
 vendor/
 /data/
-tests/data/out/
 .idea/
-composer.phar
-runtests.sh
-/build
-.env
-ssh.*.key
 .phpunit.result.cache

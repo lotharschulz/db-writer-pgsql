@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Keboola\CommonExceptions\UserExceptionInterface;
 use Keboola\Component\Logger;
-use Keboola\DbWriter\PgSQLApplication;
+use Keboola\DbWriter\PgsqlApplication;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 $logger = new Logger();
 try {
-    $app = new PgSQLApplication($logger);
+    $app = new PgsqlApplication($logger);
     $app->execute();
 } catch (UserExceptionInterface $e) {
     $logger->error($e->getMessage());

@@ -20,7 +20,6 @@ use Symfony\Component\Process\Process;
  */
 class PgsqlWriteAdapter extends PdoWriteAdapter
 {
-
     public function drop(string $tableName): void
     {
         $locks = $this->connection->fetchAll(
