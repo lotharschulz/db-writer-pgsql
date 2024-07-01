@@ -107,7 +107,20 @@ class PgsqlTest extends BaseTest
 
         foreach ($tables as $table) {
             $table['incremental'] = false;
+            // Drop the table if it exists
             $this->writer->drop($table['dbName']);
+
+            // Create the table as a permanent table with temp parameter
+            $this->writer->create($table, false);
+            // Drop the table after its creation, because its created again
+            $this->writer->drop($table['dbName']);
+
+            // Create the table as a temporary table for testing
+            $this->writer->create($table, true);
+            // Drop the table if it exists
+            $this->writer->drop($table['dbName']);
+            
+            // Create the table as a permanent table without temp parameter
             $this->writer->create($table);
         }
 
