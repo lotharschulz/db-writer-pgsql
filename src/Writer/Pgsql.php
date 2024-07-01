@@ -125,6 +125,7 @@ class Pgsql extends Writer implements WriterInterface
         }
 
         // Determine if "IF NOT EXISTS" can be used
+        // https://stackoverflow.com/a/7438222
         $createTableStmt =
             $this->serverVersion === self::SERVER_VERSION_UNKNOWN
             || version_compare($this->serverVersion, '9.1', 'ge') ?
