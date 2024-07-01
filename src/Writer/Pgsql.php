@@ -114,16 +114,22 @@ class Pgsql extends Writer implements WriterInterface
         $this->execQuery(sprintf('DROP TABLE IF EXISTS %s;', $this->escape($tableName)));
     }
 
-    public function create(array $table): void
+    public function create(array $table, bool $temp = false): void
     {
         $this->reconnectIfDisconnected();
 
-        // Table can already exist (incremental load), CREATE TABLE IF NOT EXISTS is supported for PgSQL >= 9.1
-        // https://stackoverflow.com/a/7438222
+        // Determine the base create statement based on server version and temp flag
+        $baseCreateStmt = 'CREATE';
+        if ($temp && (version_compare($this->serverVersion, '7.1', 'ge'))) {
+            $baseCreateStmt .= ' TEMPORARY';
+        }
+
+        // Determine if "IF NOT EXISTS" can be used
         $createTableStmt =
             $this->serverVersion === self::SERVER_VERSION_UNKNOWN
             || version_compare($this->serverVersion, '9.1', 'ge') ?
-                'CREATE TABLE IF NOT EXISTS' : 'CREATE TABLE';
+                "{$baseCreateStmt} TABLE IF NOT EXISTS" : "{$baseCreateStmt} TABLE";
+
         $sql = sprintf(
             '%s %s (',
             $createTableStmt,
